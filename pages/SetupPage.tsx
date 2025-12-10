@@ -1,12 +1,14 @@
 import React from 'react';
-import { ArrowLeft, Copy, Check, Terminal, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Terminal, AlertTriangle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SetupPage: React.FC = () => {
   const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
 
-  const bucketName = "phayao-assets.firebasestorage.app";
+  // Changed to appspot.com which is the common default
+  const bucketName = "phayao-assets.appspot.com";
+  
   const corsContent = `[
   {
     "origin": ["*"],
@@ -15,12 +17,6 @@ const SetupPage: React.FC = () => {
     "maxAgeSeconds": 3600
   }
 ]`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(corsContent);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 pb-24">
@@ -68,6 +64,26 @@ const SetupPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Step 0: Check Bucket Name (Optional but recommended) */}
+          <div>
+            <div className="flex items-center mb-3">
+               <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold mr-3">
+                 <Search size={16} />
+               </div>
+               <h3 className="font-bold text-slate-800">เช็คชื่อ Bucket ที่ถูกต้อง (สำคัญ)</h3>
+            </div>
+             <p className="text-sm text-slate-600 ml-11 mb-2">
+              ถ้าคุณไม่แน่ใจว่าชื่อ Bucket คืออะไร ให้พิมพ์คำสั่งนี้ใน Cloud Shell เพื่อดูรายชื่อ:
+            </p>
+            <div className="ml-11 bg-slate-900 text-slate-50 p-3 rounded-lg font-mono text-xs mb-2">
+              gsutil ls
+            </div>
+            <p className="text-sm text-slate-500 ml-11">
+              *คุณจะเห็นชื่อเช่น <code>gs://phayao-assets.appspot.com/</code> หรือ <code>gs://phayao-assets.firebasestorage.app/</code> <br/>
+              ให้ใช้ชื่อที่คุณเห็นในขั้นตอนถัดไป (ในหน้านี้เราใช้ <strong>{bucketName}</strong> เป็นค่าเริ่มต้น)
+            </p>
+          </div>
+
           {/* Step 2 */}
           <div>
             <div className="flex items-center mb-3">
@@ -100,7 +116,7 @@ EOF`}</pre>
               <h3 className="font-bold text-slate-800">บันทึกการตั้งค่า</h3>
             </div>
             <p className="text-sm text-slate-600 ml-11 mb-2">
-              รันคำสั่งสุดท้ายเพื่อเปิดการใช้งาน:
+              รันคำสั่งสุดท้ายเพื่อเปิดการใช้งาน (ถ้าชื่อ Bucket ของคุณต่างจากนี้ ให้แก้ชื่อด้านหลังด้วย):
             </p>
             <div className="ml-11 bg-slate-900 text-slate-50 p-4 rounded-lg font-mono text-xs flex justify-between items-center">
               <code>gsutil cors set cors.json gs://{bucketName}</code>

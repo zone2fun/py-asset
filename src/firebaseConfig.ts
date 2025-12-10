@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAIN-z_SyZMIR_ZFut4aXI_s8KVF0kpS6I",
   authDomain: "phayao-assets.firebaseapp.com",
   projectId: "phayao-assets",
-  storageBucket: "phayao-assets.firebasestorage.app",
+  storageBucket: "phayao-assets.appspot.com",
   messagingSenderId: "762407440936",
   appId: "1:762407440936:web:9e58458972a129b7461b1d"
 };
@@ -17,6 +17,8 @@ try {
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
     console.log("Firebase initialized successfully");
+  } else {
+    firebase.app(); // if already initialized, use that one
   }
 } catch (error) {
   console.error("Error initializing Firebase:", error);
