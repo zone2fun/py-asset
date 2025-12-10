@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Copy, Check, Terminal, AlertTriangle, Search } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Terminal, AlertTriangle, Search, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SetupPage: React.FC = () => {
@@ -41,15 +41,34 @@ const SetupPage: React.FC = () => {
         </div>
 
         <div className="p-6 space-y-8">
+
+          {/* Step 0: Create Bucket */}
+          <div>
+            <div className="flex items-center mb-3">
+               <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold mr-3">
+                 1
+               </div>
+               <h3 className="font-bold text-slate-800">เปิดใช้งาน Storage (ถ้ายังไม่เคยทำ)</h3>
+            </div>
+             <p className="text-sm text-slate-600 ml-11 mb-2">
+              ถ้าพิมพ์คำสั่ง <code>gsutil ls</code> แล้วไม่ขึ้นอะไรเลย ให้ทำขั้นตอนนี้ก่อน:
+            </p>
+            <ol className="list-decimal ml-16 text-sm text-slate-700 space-y-1 mb-3">
+              <li>ไปที่ <a href="https://console.firebase.google.com/project/phayao-assets/storage" target="_blank" className="text-blue-600 underline">Firebase Console > Storage</a></li>
+              <li>กดปุ่ม <strong>Get Started</strong> (หรือ "เริ่มใช้งาน")</li>
+              <li>กด <strong>Next</strong> (ถัดไป) และ <strong>Done</strong> (เสร็จสิ้น) โดยไม่ต้องแก้ค่าอะไร</li>
+              <li>รอจนกว่าจะเห็นหน้าจออัปโหลดไฟล์ (แปลว่าสร้างถังสำเร็จแล้ว)</li>
+            </ol>
+          </div>
           
           {/* Step 1 */}
           <div>
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">1</div>
-              <h3 className="font-bold text-slate-800">เข้า Google Cloud Console</h3>
+              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">2</div>
+              <h3 className="font-bold text-slate-800">เปิด Cloud Shell</h3>
             </div>
             <p className="text-sm text-slate-600 ml-11 mb-2">
-              คลิกที่ลิงก์นี้เพื่อเปิด Cloud Shell ของโปรเจกต์ของคุณ:
+              คลิกที่ลิงก์นี้เพื่อเปิดหน้าต่างคำสั่ง (Terminal) ของ Google:
             </p>
             <a 
               href={`https://console.cloud.google.com/home/dashboard?project=phayao-assets`}
@@ -64,30 +83,30 @@ const SetupPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Step 0: Check Bucket Name (Optional but recommended) */}
+          {/* Step 2: Check Bucket Name */}
           <div>
             <div className="flex items-center mb-3">
-               <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold mr-3">
-                 <Search size={16} />
+               <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold mr-3">
+                 3
                </div>
-               <h3 className="font-bold text-slate-800">เช็คชื่อ Bucket ที่ถูกต้อง (สำคัญ)</h3>
+               <h3 className="font-bold text-slate-800">เช็คชื่อ Bucket</h3>
             </div>
              <p className="text-sm text-slate-600 ml-11 mb-2">
-              ถ้าคุณไม่แน่ใจว่าชื่อ Bucket คืออะไร ให้พิมพ์คำสั่งนี้ใน Cloud Shell เพื่อดูรายชื่อ:
+              พิมพ์คำสั่งนี้ใน Cloud Shell เพื่อดูชื่อถังของคุณ:
             </p>
             <div className="ml-11 bg-slate-900 text-slate-50 p-3 rounded-lg font-mono text-xs mb-2">
               gsutil ls
             </div>
             <p className="text-sm text-slate-500 ml-11">
-              *คุณจะเห็นชื่อเช่น <code>gs://phayao-assets.appspot.com/</code> หรือ <code>gs://phayao-assets.firebasestorage.app/</code> <br/>
-              ให้ใช้ชื่อที่คุณเห็นในขั้นตอนถัดไป (ในหน้านี้เราใช้ <strong>{bucketName}</strong> เป็นค่าเริ่มต้น)
+              *คราวนี้คุณควรจะเห็นชื่อเช่น <code>gs://phayao-assets.appspot.com/</code> <br/>
+              ให้ใช้ชื่อนั้นแทนคำว่า <strong>{bucketName}</strong> ในขั้นตอนสุดท้าย
             </p>
           </div>
 
-          {/* Step 2 */}
+          {/* Step 3 */}
           <div>
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">2</div>
+              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">4</div>
               <h3 className="font-bold text-slate-800">สร้างไฟล์ cors.json</h3>
             </div>
             <p className="text-sm text-slate-600 ml-11 mb-2">
@@ -109,14 +128,14 @@ EOF`}</pre>
             </div>
           </div>
 
-          {/* Step 3 */}
+          {/* Step 4 */}
           <div>
             <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">3</div>
+              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 mr-3">5</div>
               <h3 className="font-bold text-slate-800">บันทึกการตั้งค่า</h3>
             </div>
             <p className="text-sm text-slate-600 ml-11 mb-2">
-              รันคำสั่งสุดท้ายเพื่อเปิดการใช้งาน (ถ้าชื่อ Bucket ของคุณต่างจากนี้ ให้แก้ชื่อด้านหลังด้วย):
+              รันคำสั่งสุดท้ายเพื่อเปิดการใช้งาน (อย่าลืมเปลี่ยนชื่อ bucket ให้ตรงกับที่เช็คได้):
             </p>
             <div className="ml-11 bg-slate-900 text-slate-50 p-4 rounded-lg font-mono text-xs flex justify-between items-center">
               <code>gsutil cors set cors.json gs://{bucketName}</code>
