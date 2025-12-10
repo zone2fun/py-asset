@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getPropertyInquiryUrl } from '../services/lineService';
 import { getPropertyById } from '../services/propertyService';
@@ -7,7 +7,7 @@ import { Property } from '../types';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [property, setProperty] = useState<Property | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   
@@ -87,7 +87,7 @@ const PropertyDetailPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
             <p className="text-slate-500 mb-4">ไม่พบข้อมูลทรัพย์</p>
-            <button onClick={() => history.goBack()} className="text-emerald-600 font-bold">กลับ</button>
+            <button onClick={() => navigate(-1)} className="text-emerald-600 font-bold">กลับ</button>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ const PropertyDetailPage: React.FC = () => {
         
         {/* Back Button */}
         <button 
-            onClick={() => history.goBack()}
+            onClick={() => navigate(-1)}
             className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-full text-slate-700 hover:bg-white transition-all shadow-sm z-20"
         >
             <ArrowLeft size={24} />

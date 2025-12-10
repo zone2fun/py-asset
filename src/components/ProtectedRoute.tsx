@@ -1,24 +1,17 @@
 import React from 'react';
-import { Route, Redirect, RouteProps } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { isAuthenticated } from '../services/authService';
 
-interface ProtectedRouteProps extends RouteProps {
-  component: React.ComponentType<any>;
+interface ProtectedRouteProps {
+  children: React.ReactElement;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ component: Component, ...rest }) => {
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        isAuthenticated() ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/login" />
-        )
-      }
-    />
-  );
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
 };
 
 export default ProtectedRoute;

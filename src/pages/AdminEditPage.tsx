@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, Camera, X } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { Property, PropertyType, SubmissionForm } from '../types';
 
 const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // If id exists = Edit, else = Add
-  const history = useHistory();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
@@ -109,7 +109,7 @@ const AdminEditPage: React.FC = () => {
         await addProperty(form, finalImages);
         alert('เพิ่มทรัพย์สำเร็จ');
       }
-      history.push('/admin');
+      navigate('/admin');
     } catch (error) {
       console.error(error);
       alert('เกิดข้อผิดพลาด');
@@ -123,7 +123,7 @@ const AdminEditPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="bg-slate-800 text-white px-4 py-4 sticky top-0 z-40 flex items-center shadow-md">
-        <button onClick={() => history.push('/admin')} className="mr-3">
+        <button onClick={() => navigate('/admin')} className="mr-3">
           <ArrowLeft />
         </button>
         <h1 className="font-bold text-lg">{isEditMode ? 'แก้ไขทรัพย์' : 'เพิ่มทรัพย์ใหม่'}</h1>

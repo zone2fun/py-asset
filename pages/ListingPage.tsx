@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Filter, Loader2 } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
 import { getProperties } from '../services/propertyService';
@@ -7,7 +7,7 @@ import { PropertyType, Property } from '../types';
 
 const ListingPage: React.FC = () => {
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const typeParam = searchParams.get('type') as PropertyType | null;
 
@@ -45,9 +45,9 @@ const ListingPage: React.FC = () => {
   const handleTypeChange = (type: PropertyType | 'All') => {
       setSelectedType(type);
       if (type === 'All') {
-          history.push('/list');
+          navigate('/list');
       } else {
-          history.push(`/list?type=${type}`);
+          navigate(`/list?type=${type}`);
       }
   };
 
@@ -56,7 +56,7 @@ const ListingPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white px-4 py-3 shadow-sm sticky top-0 z-40 flex items-center justify-between">
         <button 
-            onClick={() => history.push('/')}
+            onClick={() => navigate('/')}
             className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
         >
             <ArrowLeft size={20} />

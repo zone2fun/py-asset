@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, MessageCircle } from 'lucide-react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Property } from '../types';
 import { getPropertyInquiryUrl } from '../services/lineService';
 
@@ -9,7 +9,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleInquiry = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -18,7 +18,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   return (
     <div 
-      onClick={() => history.push(`/property/${property.id}`)}
+      onClick={() => navigate(`/property/${property.id}`)}
       className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 flex flex-col h-full active:scale-[0.98] transition-all cursor-pointer group"
     >
       {/* Image Section with Overlays */}
