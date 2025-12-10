@@ -9,7 +9,7 @@ import {
   serverTimestamp 
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../firebaseConfig";
+import { db, storage } from "../src/firebaseConfig";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
 
