@@ -1,9 +1,8 @@
-import firebase from "firebase/app";
-import "firebase/firestore";
-import "firebase/storage";
+import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
+import "firebase/compat/storage";
 
 // Hardcoded configuration to ensure stability
-// This prevents "White Screen" errors if .env files are not loaded correctly
 const firebaseConfig = {
   apiKey: "AIzaSyAIN-z_SyZMIR_ZFut4aXI_s8KVF0kpS6I",
   authDomain: "phayao-assets.firebaseapp.com",

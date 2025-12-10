@@ -1,5 +1,5 @@
 import { db, storage } from "../firebaseConfig";
-import firebase from "firebase/app";
+import firebase from "firebase/compat/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
 
@@ -31,7 +31,6 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
     });
 
     // Merge Real Data with Mock Data (so the app doesn't look empty initially)
-    // In a real production app, you might want to remove MOCK_PROPERTIES
     let filteredMock = MOCK_PROPERTIES;
     if (type && type !== 'All') {
         filteredMock = MOCK_PROPERTIES.filter(p => p.type === type);
@@ -149,5 +148,6 @@ export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) 
   
   return docRef.id;
 };
-// Deprecated alias for backward compatibility if needed, but prefer specific functions
+
+// Alias for backward compatibility
 export const submitProperty = submitUserLead;
