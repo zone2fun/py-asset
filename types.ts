@@ -12,7 +12,8 @@ export interface Property {
   type: PropertyType;
   image: string;
   description: string;
-  size?: string; // Added size field
+  size?: string;
+  images?: string[];
   coordinates?: {
     lat: number;
     lng: number;
@@ -22,8 +23,12 @@ export interface Property {
 export interface SubmissionForm {
   name: string;
   phone: string;
+  title: string;      // Added
+  price: string;      // Added (keep as string for input, convert to number later)
+  type: PropertyType; // Added
+  size: string;       // Added
   description: string;
   latitude: number | null;
   longitude: number | null;
-  images: File[]; // Changed from single image to array
+  images: File[];
 }

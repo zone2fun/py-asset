@@ -1,14 +1,86 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle } from 'lucide-react';
-import { MOCK_PROPERTIES } from '../constants';
+import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { getPropertyInquiryUrl } from '../services/lineService';
+import { getPropertyById } from '../services/propertyService';
+import { Property } from '../types';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [property, setProperty] = useState<Property | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   
-  const property = MOCK_PROPERTIES.find(p => p.id === id);
+  // Image Slider State
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const touchStartX = React.useRef(0);
+  const touchEndX = React.useRef(0);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (id) {
+        setLoading(true);
+        const data = await getPropertyById(id);
+        setProperty(data);
+        setLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [id]);
+
+  const allImages = property ? [property.image, ...(property.images || [])] : [];
+
+  const handleNextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const handlePrevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current - touchEndX.current > 50) {
+      handleNextImage();
+    }
+    if (touchStartX.current - touchEndX.current < -50) {
+      handlePrevImage();
+    }
+  };
+
+  const handleOpenMap = () => {
+    if (!property) return;
+    if (property.coordinates) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${property.coordinates.lat},${property.coordinates.lng}`, '_blank');
+    } else {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location + ' พะเยา')}`, '_blank');
+    }
+  };
+
+  const handleShare = () => {
+    if (!property) return;
+    const shareText = `แนะนำทรัพย์นี้ครับ: ${property.title}\nราคา: ฿${property.price.toLocaleString()}\nทำเล: ${property.location}`;
+    const shareUrl = window.location.href;
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+    window.open(lineUrl, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 size={32} className="animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -21,30 +93,70 @@ const PropertyDetailPage: React.FC = () => {
     );
   }
 
-  const handleOpenMap = () => {
-    if (property.coordinates) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${property.coordinates.lat},${property.coordinates.lng}`, '_blank');
-    } else {
-      // Fallback text search if no coordinates
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location + ' พะเยา')}`, '_blank');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      {/* Header Image */}
-      <div className="relative h-72 bg-slate-200">
-        <img src={property.image} alt={property.title} className="w-full h-full object-cover" />
+      {/* Image Slider Section */}
+      <div className="relative h-72 bg-slate-200 group">
+        <div 
+            className="w-full h-full overflow-hidden relative"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
+            <img 
+                src={allImages[currentImageIndex]} 
+                alt={property.title} 
+                className="w-full h-full object-cover transition-opacity duration-300" 
+            />
+            
+            {/* Arrows (Hidden on mobile by default, shown on hover/desktop or always if preferred) */}
+            {allImages.length > 1 && (
+                <>
+                    <button 
+                        onClick={handlePrevImage}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-1 rounded-full hover:bg-black/50 transition-colors"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+                    <button 
+                        onClick={handleNextImage}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-1 rounded-full hover:bg-black/50 transition-colors"
+                    >
+                        <ChevronRight size={24} />
+                    </button>
+                </>
+            )}
+
+            {/* Dots Indicator */}
+            {allImages.length > 1 && (
+                <div className="absolute bottom-16 left-0 right-0 flex justify-center space-x-2 z-10">
+                    {allImages.map((_, idx) => (
+                        <div 
+                            key={idx} 
+                            className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white scale-125' : 'bg-white/50'}`} 
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
         
         {/* Back Button */}
         <button 
             onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-full text-slate-700 hover:bg-white transition-all shadow-sm"
+            className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm p-2 rounded-full text-slate-700 hover:bg-white transition-all shadow-sm z-20"
         >
             <ArrowLeft size={24} />
         </button>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
+        {/* Share Button */}
+        <button 
+            onClick={handleShare}
+            className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-full text-slate-700 hover:bg-[#06C755] hover:text-white transition-all shadow-sm z-20"
+        >
+            <Share2 size={24} />
+        </button>
+
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12 z-10">
             <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded mb-2 inline-block">
                 {property.type}
             </span>
@@ -55,7 +167,7 @@ const PropertyDetailPage: React.FC = () => {
       </div>
 
       {/* Content Container */}
-      <div className="px-4 py-6 -mt-4 relative bg-slate-50 rounded-t-[1.5rem] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <div className="px-4 py-6 -mt-4 relative bg-slate-50 rounded-t-[1.5rem] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
         
         {/* Price Section */}
         <div className="flex items-baseline justify-between mb-6 border-b border-slate-200 pb-4">

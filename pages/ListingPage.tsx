@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter } from 'lucide-react';
+import { ArrowLeft, Filter, Loader2 } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
-import { MOCK_PROPERTIES } from '../constants';
-import { PropertyType } from '../types';
+import { getProperties } from '../services/propertyService';
+import { PropertyType, Property } from '../types';
 
 const ListingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -11,16 +11,32 @@ const ListingPage: React.FC = () => {
   const typeParam = searchParams.get('type') as PropertyType | null;
 
   const [selectedType, setSelectedType] = useState<PropertyType | 'All'>(typeParam || 'All');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Update selected type when URL param changes
   useEffect(() => {
-      if (typeParam) {
-          setSelectedType(typeParam);
-      }
+    if (typeParam) {
+      setSelectedType(typeParam);
+    }
   }, [typeParam]);
 
-  const filteredProperties = MOCK_PROPERTIES.filter(p => 
-    selectedType === 'All' ? true : p.type === selectedType
-  );
+  // Fetch data when selectedType changes
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await getProperties(selectedType);
+        setProperties(data);
+      } catch (error) {
+        console.error("Failed to load properties", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedType]);
 
   return (
     <div className="min-h-screen pb-24 bg-slate-50">
@@ -56,9 +72,14 @@ const ListingPage: React.FC = () => {
       </div>
 
       {/* List */}
-      <div className="px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProperties.length > 0 ? (
-            filteredProperties.map(property => (
+      <div className="px-4 grid grid-cols-2 gap-3">
+        {loading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-emerald-600">
+                <Loader2 size={32} className="animate-spin mb-2" />
+                <p className="text-sm">กำลังโหลดข้อมูล...</p>
+            </div>
+        ) : properties.length > 0 ? (
+            properties.map(property => (
                 <PropertyCard key={property.id} property={property} />
             ))
         ) : (
