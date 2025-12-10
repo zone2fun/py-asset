@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
 import { login } from '../services/authService';
 
@@ -8,12 +8,12 @@ const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (login(username, password)) {
-      navigate('/admin');
+      history.push('/admin');
     } else {
       setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     }

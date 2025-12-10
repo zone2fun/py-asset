@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { ArrowLeft, Filter, Loader2 } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
 import { getProperties } from '../services/propertyService';
 import { PropertyType, Property } from '../types';
 
 const ListingPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const location = useLocation();
+  const history = useHistory();
+  const searchParams = new URLSearchParams(location.search);
   const typeParam = searchParams.get('type') as PropertyType | null;
 
   const [selectedType, setSelectedType] = useState<PropertyType | 'All'>(typeParam || 'All');
@@ -16,10 +17,13 @@ const ListingPage: React.FC = () => {
 
   // Update selected type when URL param changes
   useEffect(() => {
-    if (typeParam) {
-      setSelectedType(typeParam);
+    const currentType = new URLSearchParams(location.search).get('type') as PropertyType | null;
+    if (currentType) {
+      setSelectedType(currentType);
+    } else {
+        setSelectedType('All');
     }
-  }, [typeParam]);
+  }, [location.search]);
 
   // Fetch data when selectedType changes
   useEffect(() => {
@@ -38,12 +42,21 @@ const ListingPage: React.FC = () => {
     fetchData();
   }, [selectedType]);
 
+  const handleTypeChange = (type: PropertyType | 'All') => {
+      setSelectedType(type);
+      if (type === 'All') {
+          history.push('/list');
+      } else {
+          history.push(`/list?type=${type}`);
+      }
+  };
+
   return (
     <div className="min-h-screen pb-24 bg-slate-50">
       {/* Header */}
       <div className="bg-white px-4 py-3 shadow-sm sticky top-0 z-40 flex items-center justify-between">
         <button 
-            onClick={() => navigate('/')}
+            onClick={() => history.push('/')}
             className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
         >
             <ArrowLeft size={20} />
@@ -59,7 +72,7 @@ const ListingPage: React.FC = () => {
         {['All', PropertyType.HOUSE, PropertyType.LAND, PropertyType.DORMITORY].map((type) => (
             <button
                 key={type}
-                onClick={() => setSelectedType(type as PropertyType | 'All')}
+                onClick={() => handleTypeChange(type as PropertyType | 'All')}
                 className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
                     selectedType === type 
                     ? 'bg-emerald-600 border-emerald-600 text-white' 

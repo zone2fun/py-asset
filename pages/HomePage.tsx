@@ -1,13 +1,13 @@
 import React from 'react';
 import { Home, Trees, Building, Search, Megaphone, Coins } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { PropertyType } from '../types';
 
 const HomePage: React.FC = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleCategoryClick = (type: PropertyType) => {
-    navigate(`/list?type=${type}`);
+    history.push(`/list?type=${type}`);
   };
 
   return (
@@ -22,7 +22,7 @@ const HomePage: React.FC = () => {
         
         <div className="mt-6 relative z-10">
             <button 
-                onClick={() => navigate('/list')}
+                onClick={() => history.push('/list')}
                 className="w-full bg-white text-emerald-700 py-3 px-4 rounded-xl shadow-sm flex items-center font-medium"
             >
                 <Search size={20} className="mr-2 opacity-50" />
@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-4">
             <button 
-              onClick={() => navigate('/submit')}
+              onClick={() => history.push('/submit')}
               className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4 hover:border-amber-500 transition-all group"
             >
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors shrink-0">
@@ -101,7 +101,7 @@ const HomePage: React.FC = () => {
             </button>
 
             <button 
-              onClick={() => navigate('/mortgage')}
+              onClick={() => history.push('/mortgage')}
               className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4 hover:border-purple-500 transition-all group"
             >
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">

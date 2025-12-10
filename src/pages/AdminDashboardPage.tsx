@@ -1,23 +1,18 @@
-
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Plus, Edit, Trash2, LogOut, Loader2 } from 'lucide-react';
-import { isAuthenticated, logout } from '../services/authService';
+import { logout } from '../services/authService';
 import { getProperties, deleteProperty } from '../services/propertyService';
 import { Property } from '../types';
 
 const AdminDashboardPage: React.FC = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
     loadProperties();
-  }, [navigate]);
+  }, []);
 
   const loadProperties = async () => {
     setLoading(true);
@@ -28,7 +23,7 @@ const AdminDashboardPage: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    history.push('/login');
   };
 
   const handleDelete = async (id: string) => {
@@ -55,7 +50,7 @@ const AdminDashboardPage: React.FC = () => {
 
       <div className="p-4">
         <button
-          onClick={() => navigate('/admin/add')}
+          onClick={() => history.push('/admin/add')}
           className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-sm flex items-center justify-center font-bold mb-6"
         >
           <Plus size={20} className="mr-2" />
@@ -83,7 +78,7 @@ const AdminDashboardPage: React.FC = () => {
                   
                   <div className="flex justify-end space-x-2 mt-2">
                     <button 
-                      onClick={() => navigate(`/admin/edit/${p.id}`)}
+                      onClick={() => history.push(`/admin/edit/${p.id}`)}
                       className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
                     >
                       <Edit size={16} />

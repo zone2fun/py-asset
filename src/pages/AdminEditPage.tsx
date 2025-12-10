@@ -1,14 +1,12 @@
-
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, Camera, X } from 'lucide-react';
-import { isAuthenticated } from '../services/authService';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { Property, PropertyType, SubmissionForm } from '../types';
 
 const AdminEditPage: React.FC = () => {
-  const { id } = useParams(); // If id exists = Edit, else = Add
-  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>(); // If id exists = Edit, else = Add
+  const history = useHistory();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
@@ -33,15 +31,10 @@ const AdminEditPage: React.FC = () => {
   const isEditMode = !!id;
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
-
     if (isEditMode && id) {
       loadProperty(id);
     }
-  }, [id, navigate]);
+  }, [id]);
 
   const loadProperty = async (propId: string) => {
     setLoading(true);
@@ -116,7 +109,7 @@ const AdminEditPage: React.FC = () => {
         await addProperty(form, finalImages);
         alert('เพิ่มทรัพย์สำเร็จ');
       }
-      navigate('/admin');
+      history.push('/admin');
     } catch (error) {
       console.error(error);
       alert('เกิดข้อผิดพลาด');
@@ -130,7 +123,7 @@ const AdminEditPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="bg-slate-800 text-white px-4 py-4 sticky top-0 z-40 flex items-center shadow-md">
-        <button onClick={() => navigate('/admin')} className="mr-3">
+        <button onClick={() => history.push('/admin')} className="mr-3">
           <ArrowLeft />
         </button>
         <h1 className="font-bold text-lg">{isEditMode ? 'แก้ไขทรัพย์' : 'เพิ่มทรัพย์ใหม่'}</h1>

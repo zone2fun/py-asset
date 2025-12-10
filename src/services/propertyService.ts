@@ -30,7 +30,7 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
       realProperties.push({ id: doc.id, ...doc.data() } as Property);
     });
 
-    // Merge Real Data with Mock Data (so the app doesn't look empty initially)
+    // Merge Real Data with Mock Data
     let filteredMock = MOCK_PROPERTIES;
     if (type && type !== 'All') {
         filteredMock = MOCK_PROPERTIES.filter(p => p.type === type);
@@ -40,7 +40,6 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
 
   } catch (error) {
     console.warn("Error fetching properties from Firebase:", error);
-    // Fallback to Mock Data on error
     if (type && type !== 'All') {
       return MOCK_PROPERTIES.filter(p => p.type === type);
     }
@@ -49,14 +48,12 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
 };
 
 export const getPropertyById = async (id: string): Promise<Property | undefined> => {
-  // 1. Check Mock Data first for hardcoded IDs
   const mockProp = MOCK_PROPERTIES.find(p => p.id === id);
   if (mockProp) return mockProp;
 
   if (!db) return undefined;
 
   try {
-    // 2. Fetch from Firestore
     const docRef = db.collection(COLLECTION_NAME).doc(id);
     const docSnap = await docRef.get();
 
@@ -109,23 +106,17 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
   return docRef.id;
 };
 
-// --- SUBMISSION (User Lead) ---
+// --- SUBMISSION ---
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
   if (!storage) throw new Error("Storage not initialized");
 
   const uploadPromises = files.map(async (file) => {
     try {
-      // Create a unique reference for the file
       const uniqueName = `properties/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
       const storageRef = storage.ref(uniqueName);
-      
-      // Upload file
       const snapshot = await storageRef.put(file);
-      
-      // Get URL
-      const downloadURL = await snapshot.ref.getDownloadURL();
-      return downloadURL;
+      return await snapshot.ref.getDownloadURL();
     } catch (error) {
       console.error(`Error uploading file ${file.name}:`, error);
       throw error;
@@ -138,7 +129,6 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
 export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) => {
   if (!db) throw new Error("Firestore not initialized");
 
-  // Save to a separate 'submissions' collection for review/audit
   const docRef = await db.collection(SUBMISSION_COLLECTION).add({
     ...form,
     images: imageUrls,
@@ -149,5 +139,4 @@ export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) 
   return docRef.id;
 };
 
-// Alias for backward compatibility
 export const submitProperty = submitUserLead;

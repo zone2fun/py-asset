@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Coins, MessageCircle } from 'lucide-react';
 import { LINE_OA_ID } from '../constants';
 
 const MortgagePage: React.FC = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleLineContact = () => {
     // Open LINE with a specific message
@@ -17,7 +17,7 @@ const MortgagePage: React.FC = () => {
       {/* Header */}
       <div className="bg-purple-700 text-white px-4 py-4 sticky top-0 z-40 flex items-center shadow-md">
         <button 
-            onClick={() => navigate(-1)}
+            onClick={() => history.goBack()}
             className="p-2 rounded-full hover:bg-white/10 text-white mr-2"
         >
             <ArrowLeft size={24} />
