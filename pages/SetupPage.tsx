@@ -54,7 +54,7 @@ const SetupPage: React.FC = () => {
               ถ้าพิมพ์คำสั่ง <code>gsutil ls</code> แล้วไม่ขึ้นอะไรเลย ให้ทำขั้นตอนนี้ก่อน:
             </p>
             <ol className="list-decimal ml-16 text-sm text-slate-700 space-y-1 mb-3">
-              <li>ไปที่ <a href="https://console.firebase.google.com/project/phayao-assets/storage" target="_blank" className="text-blue-600 underline">Firebase Console > Storage</a></li>
+              <li>ไปที่ <a href="https://console.firebase.google.com/project/phayao-assets/storage" target="_blank" className="text-blue-600 underline">Firebase Console &gt; Storage</a></li>
               <li>กดปุ่ม <strong>Get Started</strong> (หรือ "เริ่มใช้งาน")</li>
               <li>กด <strong>Next</strong> (ถัดไป) และ <strong>Done</strong> (เสร็จสิ้น) โดยไม่ต้องแก้ค่าอะไร</li>
               <li>รอจนกว่าจะเห็นหน้าจออัปโหลดไฟล์ (แปลว่าสร้างถังสำเร็จแล้ว)</li>
