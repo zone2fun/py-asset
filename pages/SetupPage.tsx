@@ -64,7 +64,7 @@ const SetupPage: React.FC = () => {
               เปิด Google Cloud Console (phayao-assets)
             </a>
             <p className="text-sm text-slate-500 ml-11 mt-2">
-              *เมื่อเปิดแล้ว ให้กดปุ่ม <strong>Activate Cloud Shell</strong> (ไอคอน >_ ด้านขวาบน)
+              *เมื่อเปิดแล้ว ให้กดปุ่ม <strong>Activate Cloud Shell</strong> (ไอคอน &gt;_ ด้านขวาบน)
             </p>
           </div>
 
