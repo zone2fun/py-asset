@@ -1,3 +1,4 @@
+
 export enum PropertyType {
   HOUSE = 'House',
   LAND = 'Land',
@@ -18,15 +19,19 @@ export interface Property {
     lat: number;
     lng: number;
   };
+  contactName?: string;
+  contactPhone?: string;
+  createdAt?: any;
+  status?: string;
 }
 
 export interface SubmissionForm {
   name: string;
   phone: string;
-  title: string;      // Added
-  price: string;      // Added (keep as string for input, convert to number later)
-  type: PropertyType; // Added
-  size: string;       // Added
+  title: string;
+  price: string;
+  type: PropertyType;
+  size: string;
   description: string;
   latitude: number | null;
   longitude: number | null;

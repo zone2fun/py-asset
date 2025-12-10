@@ -1,4 +1,4 @@
-import { db, storage } from "../src/firebaseConfig";
+import { db, storage } from "../firebaseConfig";
 import firebase from "firebase/compat/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
