@@ -9,6 +9,7 @@ import MortgagePage from './pages/MortgagePage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminEditPage from './pages/AdminEditPage';
+import SetupPage from './pages/SetupPage';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -25,6 +26,7 @@ const App: React.FC = () => {
           <Route path="/contact" element={<ContactPage />} />
           
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/setup" element={<SetupPage />} />
           
           {/* Protected Admin Routes */}
           <Route 

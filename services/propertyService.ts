@@ -117,8 +117,12 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
       const storageRef = storage.ref(uniqueName);
       const snapshot = await storageRef.put(file);
       return await snapshot.ref.getDownloadURL();
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error uploading file ${file.name}:`, error);
+      // Check for CORS or network errors
+      if (error.code === 'storage/retry-limit-exceeded' || error.message.includes('network') || error.code === 'storage/unknown') {
+         throw new Error("CORS_ERROR");
+      }
       throw error;
     }
   });

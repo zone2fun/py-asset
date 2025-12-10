@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, User } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Lock, User, Wrench } from 'lucide-react';
 import { login } from '../services/authService';
 
 const LoginPage: React.FC = () => {
@@ -67,6 +67,13 @@ const LoginPage: React.FC = () => {
             เข้าสู่ระบบ
           </button>
         </form>
+
+        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+          <Link to="/setup" className="inline-flex items-center text-xs text-slate-400 hover:text-emerald-600 transition-colors">
+            <Wrench size={14} className="mr-1" />
+            วิธีแก้ปัญหาอัปโหลดรูป (CORS)
+          </Link>
+        </div>
       </div>
     </div>
   );

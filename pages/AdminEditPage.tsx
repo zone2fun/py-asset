@@ -109,9 +109,13 @@ const AdminEditPage: React.FC = () => {
         alert('เพิ่มทรัพย์สำเร็จ');
       }
       navigate('/admin');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('เกิดข้อผิดพลาด');
+      if (error.message === "CORS_ERROR") {
+        alert("อัปโหลดรูปไม่ผ่าน (CORS Error)!\nกรุณาไปที่หน้า Login > กด 'วิธีแก้ปัญหาอัปโหลดรูป' แล้วทำตามขั้นตอน");
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+      }
     } finally {
       setSubmitting(false);
     }
