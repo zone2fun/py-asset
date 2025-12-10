@@ -1,0 +1,8 @@
+{
+  "name": "Phayao Asset Hub",
+  "description": "A real estate marketplace for Phayao province allowing users to view houses, land, and dormitories, and submit their own properties.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
