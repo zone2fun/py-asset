@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
-import { Property, PropertyType, SubmissionForm } from '../types';
+import { PropertyType, SubmissionForm } from '../types';
 
 const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // If id exists = Edit, else = Add
@@ -86,7 +86,6 @@ const AdminEditPage: React.FC = () => {
       }
 
       // 2. Combine with existing URLs (if editing)
-      // Note: This logic is simplified. Real apps might handle deleting old images.
       const finalImages = isEditMode 
         ? [...previewUrls.filter(url => url.startsWith('http')), ...uploadedUrls]
         : uploadedUrls;
@@ -138,7 +137,6 @@ const AdminEditPage: React.FC = () => {
             {previewUrls.map((url, idx) => (
                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border">
                  <img src={url} className="w-full h-full object-cover" />
-                 {/* Remove button could go here */}
                </div>
             ))}
             <div 
@@ -194,7 +192,6 @@ const AdminEditPage: React.FC = () => {
           />
         </div>
 
-        {/* Coords (Simplified for Admin) */}
         <div className="grid grid-cols-2 gap-4">
            <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Lat</label>

@@ -1,7 +1,4 @@
 
-// A simple mock authentication service
-// In a real app, integrate this with Firebase Auth
-
 const AUTH_KEY = 'phayao_asset_auth';
 
 export const login = (username: string, pass: string): boolean => {

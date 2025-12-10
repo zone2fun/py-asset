@@ -139,4 +139,5 @@ export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) 
   return docRef.id;
 };
 
+// Alias for backwards compatibility if needed
 export const submitProperty = submitUserLead;
