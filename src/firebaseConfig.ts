@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import firebase from "firebase/app";
+import "firebase/firestore";
+import "firebase/storage";
 
 // Hardcoded configuration to ensure stability
 // This prevents "White Screen" errors if .env files are not loaded correctly
@@ -14,21 +14,17 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase with error handling
-let app;
-let dbInstance;
-let storageInstance;
-
 try {
-  app = initializeApp(firebaseConfig);
-  dbInstance = getFirestore(app);
-  storageInstance = getStorage(app);
-  console.log("Firebase initialized successfully");
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("Firebase initialized successfully");
+  }
 } catch (error) {
   console.error("Error initializing Firebase:", error);
 }
 
 // Export services
-export const db = dbInstance!;
-export const storage = storageInstance!;
+export const db = firebase.firestore();
+export const storage = firebase.storage();
 
-export default app;
+export default firebase.app();

@@ -1,18 +1,5 @@
-
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  query, 
-  where, 
-  addDoc, 
-  deleteDoc,
-  updateDoc,
-  serverTimestamp 
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebaseConfig";
+import firebase from "firebase/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
 
@@ -29,31 +16,32 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
   }
 
   try {
-    let q = collection(db, COLLECTION_NAME);
+    // Try to fetch from Firestore
+    let query: firebase.firestore.Query = db.collection(COLLECTION_NAME);
     
     if (type && type !== 'All') {
-      q = query(collection(db, COLLECTION_NAME), where("type", "==", type)) as any;
+      query = query.where("type", "==", type);
     }
 
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await query.get();
     
     const realProperties: Property[] = [];
     querySnapshot.forEach((doc) => {
       realProperties.push({ id: doc.id, ...doc.data() } as Property);
     });
 
-    // Merge with Mock Data for demo purposes if needed, or just return real data
-    // To allow user to see their changes immediately, we prioritize real data
-    // But we keep mock data if the DB is empty so the app isn't blank
-    if (realProperties.length === 0) {
-       if (type && type !== 'All') return MOCK_PROPERTIES.filter(p => p.type === type);
-       return MOCK_PROPERTIES;
+    // Merge Real Data with Mock Data (so the app doesn't look empty initially)
+    // In a real production app, you might want to remove MOCK_PROPERTIES
+    let filteredMock = MOCK_PROPERTIES;
+    if (type && type !== 'All') {
+        filteredMock = MOCK_PROPERTIES.filter(p => p.type === type);
     }
 
-    return realProperties;
+    return [...realProperties, ...filteredMock];
 
   } catch (error) {
     console.warn("Error fetching properties from Firebase:", error);
+    // Fallback to Mock Data on error
     if (type && type !== 'All') {
       return MOCK_PROPERTIES.filter(p => p.type === type);
     }
@@ -62,21 +50,25 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
 };
 
 export const getPropertyById = async (id: string): Promise<Property | undefined> => {
-  if (!db) return MOCK_PROPERTIES.find(p => p.id === id);
+  // 1. Check Mock Data first for hardcoded IDs
+  const mockProp = MOCK_PROPERTIES.find(p => p.id === id);
+  if (mockProp) return mockProp;
+
+  if (!db) return undefined;
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, id);
-    const docSnap = await getDoc(docRef);
+    // 2. Fetch from Firestore
+    const docRef = db.collection(COLLECTION_NAME).doc(id);
+    const docSnap = await docRef.get();
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) {
       return { id: docSnap.id, ...docSnap.data() } as Property;
-    } 
-    
-    // Fallback to mock data if not found in DB
-    return MOCK_PROPERTIES.find(p => p.id === id);
+    } else {
+      return undefined;
+    }
   } catch (error) {
     console.warn("Error fetching property by ID:", error);
-    return MOCK_PROPERTIES.find(p => p.id === id);
+    return undefined;
   }
 };
 
@@ -84,13 +76,12 @@ export const getPropertyById = async (id: string): Promise<Property | undefined>
 
 export const deleteProperty = async (id: string) => {
   if (!db) throw new Error("Database not initialized");
-  await deleteDoc(doc(db, COLLECTION_NAME, id));
+  await db.collection(COLLECTION_NAME).doc(id).delete();
 };
 
 export const updateProperty = async (id: string, data: Partial<Property>) => {
   if (!db) throw new Error("Database not initialized");
-  const docRef = doc(db, COLLECTION_NAME, id);
-  await updateDoc(docRef, data);
+  await db.collection(COLLECTION_NAME).doc(id).update(data);
 };
 
 export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => {
@@ -101,7 +92,7 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
     description: form.description,
     price: parseFloat(form.price.toString().replace(/,/g, '')) || 0,
     type: form.type,
-    location: "พะเยา", // Default or add location field to admin form
+    location: "พะเยา", 
     size: form.size,
     image: imageUrls[0] || '',
     images: imageUrls,
@@ -111,25 +102,31 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
       lat: form.latitude,
       lng: form.longitude
     } : null,
-    createdAt: serverTimestamp(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     status: 'active'
   };
 
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), propertyData);
+  const docRef = await db.collection(COLLECTION_NAME).add(propertyData);
   return docRef.id;
 };
 
-// --- USER SUBMISSION (LEAD GEN) ---
+// --- SUBMISSION (User Lead) ---
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
   if (!storage) throw new Error("Storage not initialized");
 
   const uploadPromises = files.map(async (file) => {
     try {
-      const uniqueName = `submissions/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
-      const storageRef = ref(storage, uniqueName);
-      const snapshot = await uploadBytes(storageRef, file);
-      return await getDownloadURL(snapshot.ref);
+      // Create a unique reference for the file
+      const uniqueName = `properties/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
+      const storageRef = storage.ref(uniqueName);
+      
+      // Upload file
+      const snapshot = await storageRef.put(file);
+      
+      // Get URL
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
     } catch (error) {
       console.error(`Error uploading file ${file.name}:`, error);
       throw error;
@@ -143,12 +140,14 @@ export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) 
   if (!db) throw new Error("Firestore not initialized");
 
   // Save to a separate 'submissions' collection for review/audit
-  const docRef = await addDoc(collection(db, SUBMISSION_COLLECTION), {
+  const docRef = await db.collection(SUBMISSION_COLLECTION).add({
     ...form,
     images: imageUrls,
-    createdAt: serverTimestamp(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     status: 'pending'
   });
   
   return docRef.id;
 };
+// Deprecated alias for backward compatibility if needed, but prefer specific functions
+export const submitProperty = submitUserLead;
