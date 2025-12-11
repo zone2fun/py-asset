@@ -91,6 +91,11 @@ const AdminEditPage: React.FC = () => {
         ? [...previewUrls.filter(url => url.startsWith('http')), ...uploadedUrls]
         : uploadedUrls;
 
+      // Prepare coordinates (use null if missing, never undefined)
+      const coordinates = (form.latitude !== null && form.longitude !== null && !isNaN(form.latitude) && !isNaN(form.longitude))
+        ? { lat: form.latitude, lng: form.longitude } 
+        : null;
+
       if (isEditMode && id) {
         // Update
         await updateProperty(id, {
@@ -101,7 +106,7 @@ const AdminEditPage: React.FC = () => {
           description: form.description,
           image: finalImages[0] || '',
           images: finalImages,
-          coordinates: form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : undefined
+          coordinates: coordinates
         });
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
@@ -174,9 +179,9 @@ const AdminEditPage: React.FC = () => {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">ประเภท</label>
             <select name="type" value={form.type} onChange={handleInputChange} className="w-full p-3 border rounded-xl">
-               <option value={PropertyType.HOUSE}>House</option>
-               <option value={PropertyType.LAND}>Land</option>
-               <option value={PropertyType.DORMITORY}>Dormitory</option>
+               <option value={PropertyType.HOUSE}>บ้าน</option>
+               <option value={PropertyType.LAND}>ที่ดิน</option>
+               <option value={PropertyType.DORMITORY}>หอพัก</option>
             </select>
           </div>
         </div>
@@ -197,20 +202,27 @@ const AdminEditPage: React.FC = () => {
           />
         </div>
 
+        {/* Coords (Simplified for Admin) */}
         <div className="grid grid-cols-2 gap-4">
            <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Lat</label>
              <input 
-                type="number" step="any" name="latitude" value={form.latitude || ''} 
-                onChange={(e) => setForm({...form, latitude: parseFloat(e.target.value)})}
+                type="number" step="any" name="latitude" value={form.latitude !== null ? form.latitude : ''} 
+                onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setForm({...form, latitude: isNaN(val) ? null : val});
+                }}
                 className="w-full p-3 border rounded-xl"
              />
            </div>
            <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Lng</label>
              <input 
-                type="number" step="any" name="longitude" value={form.longitude || ''} 
-                onChange={(e) => setForm({...form, longitude: parseFloat(e.target.value)})}
+                type="number" step="any" name="longitude" value={form.longitude !== null ? form.longitude : ''} 
+                onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setForm({...form, longitude: isNaN(val) ? null : val});
+                }}
                 className="w-full p-3 border rounded-xl"
              />
            </div>
