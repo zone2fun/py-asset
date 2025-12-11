@@ -1,10 +1,17 @@
-import { db, storage } from "../firebaseConfig";
+import { db } from "../firebaseConfig";
 import firebase from "firebase/compat/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
 
 const COLLECTION_NAME = "properties";
 const SUBMISSION_COLLECTION = "submissions";
+
+// ==========================================
+// ☁️ CLOUDINARY CONFIG
+// ==========================================
+const CLOUD_NAME = "dxegbpc5t"; 
+const UPLOAD_PRESET = "phayao_upload"; 
+// ==========================================
 
 // --- FETCH DATA ---
 
@@ -106,23 +113,34 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
   return docRef.id;
 };
 
-// --- SUBMISSION ---
+// --- SUBMISSION & UPLOAD (CLOUDINARY) ---
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
-  if (!storage) throw new Error("Storage not initialized");
-
+  
   const uploadPromises = files.map(async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET); 
+
     try {
-      const uniqueName = `properties/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
-      const storageRef = storage.ref(uniqueName);
-      const snapshot = await storageRef.put(file);
-      return await snapshot.ref.getDownloadURL();
-    } catch (error: any) {
-      console.error(`Error uploading file ${file.name}:`, error);
-      // Check for CORS or network errors
-      if (error.code === 'storage/retry-limit-exceeded' || error.message.includes('network') || error.code === 'storage/unknown') {
-         throw new Error("CORS_ERROR");
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Cloudinary Error:", data);
+        throw new Error(data.error?.message || "Upload failed");
       }
+
+      return data.secure_url;
+    } catch (error) {
+      console.error("Error uploading to Cloudinary:", error);
       throw error;
     }
   });

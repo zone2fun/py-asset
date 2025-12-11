@@ -9,14 +9,8 @@ const SUBMISSION_COLLECTION = "submissions";
 // ==========================================
 // ☁️ CLOUDINARY CONFIG
 // ==========================================
-// 1. Register at cloudinary.com
-// 2. Settings > Upload > Add upload preset
-// 3. Set Signing Mode = "Unsigned"
-// ==========================================
-
-const CLOUD_NAME = "demo"; // Change this to your Cloud Name
-const UPLOAD_PRESET = "phayao_upload"; // Change this to your Unsigned Upload Preset
-
+const CLOUD_NAME = "dxegbpc5t"; 
+const UPLOAD_PRESET = "phayao_upload"; 
 // ==========================================
 
 // --- FETCH DATA ---
@@ -127,7 +121,6 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET); 
-    // formData.append("cloud_name", CLOUD_NAME); // Not needed in body, used in URL
 
     try {
       const response = await fetch(
@@ -145,7 +138,6 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
         throw new Error(data.error?.message || "Upload failed");
       }
 
-      console.log("Uploaded:", data.secure_url);
       return data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
