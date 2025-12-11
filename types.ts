@@ -1,8 +1,8 @@
 
 export enum PropertyType {
-  HOUSE = 'House',
-  LAND = 'Land',
-  DORMITORY = 'Dormitory'
+  HOUSE = 'บ้าน',
+  LAND = 'ที่ดิน',
+  DORMITORY = 'หอพัก'
 }
 
 export interface Property {
