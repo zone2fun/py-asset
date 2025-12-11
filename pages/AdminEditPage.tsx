@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation, Search } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -46,6 +46,10 @@ const AdminEditPage: React.FC = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [gettingLoc, setGettingLoc] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   // Default center for Phayao
   const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
@@ -130,6 +134,29 @@ const AdminEditPage: React.FC = () => {
     } else {
       alert("Browser นี้ไม่รองรับ Geolocation");
       setGettingLoc(false);
+    }
+  };
+
+  const handleSearchLocation = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      // Use Nominatim API (OpenStreetMap)
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        setForm(prev => ({ ...prev, latitude: lat, longitude: lon }));
+      } else {
+        alert("ไม่พบสถานที่นี้ ลองระบุชื่อให้ชัดเจนขึ้น (เช่น เพิ่มคำว่า พะเยา)");
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      alert("เกิดข้อผิดพลาดในการค้นหา");
+    } finally {
+      setSearching(false);
     }
   };
 
@@ -273,6 +300,26 @@ const AdminEditPage: React.FC = () => {
                 {gettingLoc ? <Loader2 size={12} className="animate-spin mr-1" /> : <Navigation size={12} className="mr-1" />}
                 ระบุตำแหน่งปัจจุบัน
              </button>
+          </div>
+
+          {/* Search Box */}
+          <div className="flex space-x-2">
+            <input 
+              type="text" 
+              placeholder="ค้นหาสถานที่ (เช่น โลตัส พะเยา)" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchLocation())}
+              className="flex-grow p-2 text-sm border rounded-lg"
+            />
+            <button 
+              type="button"
+              onClick={handleSearchLocation}
+              disabled={searching}
+              className="bg-slate-100 border border-slate-200 p-2 rounded-lg text-slate-600 hover:bg-slate-200"
+            >
+              {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+            </button>
           </div>
 
           <div className="h-64 rounded-xl overflow-hidden border border-slate-200 z-0 relative shadow-inner">
