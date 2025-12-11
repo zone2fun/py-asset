@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown, MapPin } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -65,6 +65,18 @@ interface ImageItem {
   isNew: boolean; // Flag to identify new uploads
 }
 
+const PHAYAO_DISTRICTS = [
+  'เมืองพะเยา',
+  'แม่ใจ',
+  'เชียงคำ',
+  'ดอกคำใต้',
+  'ปง',
+  'จุน',
+  'เชียงม่วน',
+  'ภูซาง',
+  'ภูกามยาว'
+];
+
 const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -79,6 +91,9 @@ const AdminEditPage: React.FC = () => {
   const [gettingLoc, setGettingLoc] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
+
+  // Selected District
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('เมืองพะเยา');
 
   const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
 
@@ -130,6 +145,20 @@ const AdminEditPage: React.FC = () => {
         isNew: false
       }));
       setImageItems(items);
+
+      // Extract District from Location string (e.g. "เมืองพะเยา, พะเยา")
+      if (prop.location) {
+        const parts = prop.location.split(',');
+        const district = parts[0].trim();
+        // Check if extracted district is in our list
+        if (PHAYAO_DISTRICTS.includes(district)) {
+          setSelectedDistrict(district);
+        } else if (PHAYAO_DISTRICTS.some(d => district.includes(d))) {
+          // Fuzzy match
+          const match = PHAYAO_DISTRICTS.find(d => district.includes(d));
+          if (match) setSelectedDistrict(match);
+        }
+      }
     }
     setLoading(false);
   };
@@ -256,6 +285,9 @@ const AdminEditPage: React.FC = () => {
       const coordinates = (form.latitude !== null && form.longitude !== null && !isNaN(form.latitude) && !isNaN(form.longitude))
         ? { lat: form.latitude, lng: form.longitude } 
         : null;
+      
+      // Format Location
+      const finalLocation = `${selectedDistrict}, พะเยา`;
 
       const propertyData = {
         title: form.title,
@@ -266,17 +298,17 @@ const AdminEditPage: React.FC = () => {
         image: finalImages[0] || '', // First image is cover
         images: finalImages,
         coordinates: coordinates,
-        status: form.status
+        status: form.status,
+        location: finalLocation
       };
 
       if (isEditMode && id) {
         await updateProperty(id, propertyData);
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
-        await addProperty(form, finalImages); // Note: addProperty implementation usually takes form + urls. 
-        // Since we reconstructed finalImages perfectly, we might need to adjust addProperty or just pass logic.
-        // Actually addProperty in service constructs the object. Let's rely on it but passed aligned images.
-        // Wait, addProperty in service uses image[0] as cover. So passing sorted array works perfectly.
+        // Pass the updated form with location included
+        const formWithLocation = { ...form, location: finalLocation };
+        await addProperty(formWithLocation, finalImages); 
       }
       navigate('/admin');
     } catch (error: any) {
@@ -398,6 +430,23 @@ const AdminEditPage: React.FC = () => {
                <option value={PropertyType.DORMITORY}>หอพัก</option>
             </select>
           </div>
+        </div>
+
+        {/* District Selector */}
+        <div>
+           <label className="block text-sm font-medium text-slate-700 mb-1">อำเภอ (ใน จ.พะเยา)</label>
+           <div className="relative">
+              <MapPin size={20} className="absolute left-3 top-3.5 text-slate-400 pointer-events-none" />
+              <select 
+                  value={selectedDistrict} 
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
+                  className="w-full pl-10 pr-3 py-3 border rounded-xl bg-white appearance-none cursor-pointer hover:border-emerald-400 transition-colors"
+              >
+                  {PHAYAO_DISTRICTS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                  ))}
+              </select>
+           </div>
         </div>
 
         <div>

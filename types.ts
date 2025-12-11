@@ -37,4 +37,5 @@ export interface SubmissionForm {
   longitude: number | null;
   images: File[];
   status: string; // Added status field
+  location?: string; // Added specific location string (e.g. District)
 }

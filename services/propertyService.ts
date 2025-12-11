@@ -81,7 +81,7 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
     description: form.description,
     price: parseFloat(form.price.toString().replace(/,/g, '')) || 0,
     type: form.type,
-    location: "พะเยา", 
+    location: form.location || "พะเยา", // Use form location or default
     size: form.size,
     image: imageUrls[0] || '',
     images: imageUrls,
