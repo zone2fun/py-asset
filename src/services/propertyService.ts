@@ -6,14 +6,18 @@ import { MOCK_PROPERTIES } from "../constants";
 const COLLECTION_NAME = "properties";
 const SUBMISSION_COLLECTION = "submissions";
 
-// --- CLOUDINARY CONFIG ---
-// 1. สมัครฟรีที่ cloudinary.com
-// 2. ไปที่ Settings > Upload > Add upload preset
-// 3. ตั้งชื่อ Preset, เลือก Signing Mode = "Unsigned" (สำคัญมาก!)
-// 4. นำค่ามาใส่ตรงนี้ครับ
+// ==========================================
+// ☁️ CLOUDINARY CONFIG
+// ==========================================
+// 1. Register at cloudinary.com
+// 2. Settings > Upload > Add upload preset
+// 3. Set Signing Mode = "Unsigned"
+// ==========================================
 
-const CLOUD_NAME = "demo"; // เปลี่ยนเป็น Cloud Name ของคุณ (เช่น dxy123abc)
-const UPLOAD_PRESET = "docs_upload_example_us_preset"; // เปลี่ยนเป็น Preset ของคุณ (ต้องเป็น Unsigned)
+const CLOUD_NAME = "demo"; // Change this to your Cloud Name
+const UPLOAD_PRESET = "phayao_upload"; // Change this to your Unsigned Upload Preset
+
+// ==========================================
 
 // --- FETCH DATA ---
 
@@ -115,14 +119,15 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
   return docRef.id;
 };
 
-// --- SUBMISSION & UPLOAD ---
+// --- SUBMISSION & UPLOAD (CLOUDINARY) ---
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
-  // Use Cloudinary for easier CORS handling
+  
   const uploadPromises = files.map(async (file) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET); 
+    // formData.append("cloud_name", CLOUD_NAME); // Not needed in body, used in URL
 
     try {
       const response = await fetch(
@@ -136,9 +141,11 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error("Cloudinary Error:", data);
         throw new Error(data.error?.message || "Upload failed");
       }
 
+      console.log("Uploaded:", data.secure_url);
       return data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
