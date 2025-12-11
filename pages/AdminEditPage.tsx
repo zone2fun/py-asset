@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation, Search, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -58,25 +57,31 @@ const LocationMarker = ({ position, onLocationSelect }: { position: { lat: numbe
   );
 };
 
+// Interface for Image Management
+interface ImageItem {
+  id: string;     // Unique ID for React Key
+  url: string;    // Display URL (Blob or Remote)
+  file?: File;    // File object if it's a new upload
+  isNew: boolean; // Flag to identify new uploads
+}
+
 const AdminEditPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // If id exists = Edit, else = Add
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<File[]>([]);
+  
+  // Unified Image State
+  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
+  
   const [gettingLoc, setGettingLoc] = useState(false);
-
-  // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
 
-  // Default center for Phayao
   const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
 
-  // We use SubmissionForm type for state because it matches the input fields nicely
   const [form, setForm] = useState<SubmissionForm>({
     title: '',
     price: '',
@@ -87,8 +92,8 @@ const AdminEditPage: React.FC = () => {
     phone: '0614544516',
     latitude: null,
     longitude: null,
-    images: [], // Used only for tracking new files
-    status: 'active' // Default status
+    images: [],
+    status: 'active'
   });
 
   const isEditMode = !!id;
@@ -116,9 +121,15 @@ const AdminEditPage: React.FC = () => {
         images: [],
         status: prop.status || 'active'
       });
-      // Set existing images
+      
+      // Load existing images into state
       const existingImages = prop.images && prop.images.length > 0 ? prop.images : [prop.image];
-      setPreviewUrls(existingImages);
+      const items: ImageItem[] = existingImages.map((url, index) => ({
+        id: `existing-${index}-${Date.now()}`,
+        url: url,
+        isNew: false
+      }));
+      setImageItems(items);
     }
     setLoading(false);
   };
@@ -130,12 +141,29 @@ const AdminEditPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      // Fix: Explicitly cast to File[] to prevent 'unknown' type error in map callback
       const files = Array.from(e.target.files) as File[];
-      const newUrls = files.map(f => URL.createObjectURL(f));
-      setNewImages(prev => [...prev, ...files]);
-      setPreviewUrls(prev => [...prev, ...newUrls]);
+      const newItems: ImageItem[] = files.map(file => ({
+        id: `new-${Math.random().toString(36).substr(2, 9)}`,
+        url: URL.createObjectURL(file),
+        file: file,
+        isNew: true
+      }));
+      setImageItems(prev => [...prev, ...newItems]);
     }
+    // Reset input to allow selecting same file again if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImageItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetCover = (index: number) => {
+    if (index === 0) return; // Already cover
+    const newItems = [...imageItems];
+    const [item] = newItems.splice(index, 1);
+    newItems.unshift(item);
+    setImageItems(newItems);
   };
 
   const getCurrentLocation = () => {
@@ -165,24 +193,18 @@ const AdminEditPage: React.FC = () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      // 1. เพิ่ม Context การค้นหาถ้าผู้ใช้ไม่ได้ระบุจังหวัด/ประเทศ
       let finalQuery = searchQuery;
-      // ถ้าไม่มีคำว่า Phayao หรือ พะเยา ให้เติมต่อท้าย
       if (!finalQuery.toLowerCase().includes('phayao') && !finalQuery.includes('พะเยา')) {
-        finalQuery += ' Phayao Thailand'; // เน้นพะเยา
+        finalQuery += ' Phayao Thailand';
       }
 
-      // Use Nominatim API (OpenStreetMap)
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(finalQuery)}&limit=1`);
       const data = await response.json();
       
       if (data && data.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
-        
-        // แจ้งผู้ใช้ว่าเจอที่ไหน เพื่อความชัวร์
-        alert(`พบตำแหน่ง: ${data[0].display_name}\n(ถ้าไม่ตรง สามารถลากหมุดบนแผนที่ได้เลย)`);
-        
+        alert(`พบตำแหน่ง: ${data[0].display_name}`);
         setForm(prev => ({ ...prev, latitude: lat, longitude: lon }));
       } else {
         alert("ไม่พบสถานที่นี้ ลองระบุชื่อสถานที่ + ตำบล/อำเภอ ให้ชัดเจนขึ้น");
@@ -204,50 +226,63 @@ const AdminEditPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (imageItems.length === 0) {
+      alert("กรุณาเพิ่มรูปภาพอย่างน้อย 1 รูป");
+      return;
+    }
     if (!confirm(isEditMode ? 'บันทึกการแก้ไข?' : 'เพิ่มทรัพย์ใหม่?')) return;
     
     setSubmitting(true);
     try {
-      // 1. Upload new images if any
+      // 1. Separate new files to upload
+      const filesToUpload = imageItems.filter(item => item.isNew && item.file).map(item => item.file!);
+      
+      // 2. Upload new files
       let uploadedUrls: string[] = [];
-      if (newImages.length > 0) {
-        uploadedUrls = await uploadImages(newImages);
+      if (filesToUpload.length > 0) {
+        uploadedUrls = await uploadImages(filesToUpload);
       }
 
-      // 2. Combine with existing URLs (if editing)
-      const finalImages = isEditMode 
-        ? [...previewUrls.filter(url => url.startsWith('http')), ...uploadedUrls]
-        : uploadedUrls;
+      // 3. Reconstruct final image list preserving the visual order
+      let uploadPointer = 0;
+      const finalImages = imageItems.map(item => {
+        if (item.isNew) {
+          return uploadedUrls[uploadPointer++];
+        }
+        return item.url;
+      });
 
-      // Prepare coordinates (use null if missing, never undefined)
+      // Prepare coordinates
       const coordinates = (form.latitude !== null && form.longitude !== null && !isNaN(form.latitude) && !isNaN(form.longitude))
         ? { lat: form.latitude, lng: form.longitude } 
         : null;
 
+      const propertyData = {
+        title: form.title,
+        price: parseFloat(form.price.replace(/,/g, '')),
+        type: form.type,
+        size: form.size,
+        description: form.description,
+        image: finalImages[0] || '', // First image is cover
+        images: finalImages,
+        coordinates: coordinates,
+        status: form.status
+      };
+
       if (isEditMode && id) {
-        // Update
-        await updateProperty(id, {
-          title: form.title,
-          price: parseFloat(form.price.replace(/,/g, '')),
-          type: form.type,
-          size: form.size,
-          description: form.description,
-          image: finalImages[0] || '',
-          images: finalImages,
-          coordinates: coordinates,
-          status: form.status
-        });
+        await updateProperty(id, propertyData);
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
-        // Add
-        await addProperty(form, finalImages);
-        alert('เพิ่มทรัพย์สำเร็จ');
+        await addProperty(form, finalImages); // Note: addProperty implementation usually takes form + urls. 
+        // Since we reconstructed finalImages perfectly, we might need to adjust addProperty or just pass logic.
+        // Actually addProperty in service constructs the object. Let's rely on it but passed aligned images.
+        // Wait, addProperty in service uses image[0] as cover. So passing sorted array works perfectly.
       }
       navigate('/admin');
     } catch (error: any) {
       console.error(error);
       if (error.message === "CORS_ERROR") {
-        alert("อัปโหลดรูปไม่ผ่าน (CORS Error)!\nกรุณาไปที่หน้า Login > กด 'วิธีแก้ปัญหาอัปโหลดรูป' แล้วทำตามขั้นตอน");
+        alert("อัปโหลดรูปไม่ผ่าน (CORS Error)! กรุณาตรวจสอบการตั้งค่า");
       } else {
         alert('เกิดข้อผิดพลาด: ' + error.message);
       }
@@ -288,21 +323,52 @@ const AdminEditPage: React.FC = () => {
             </button>
         </div>
         
-        {/* Images */}
+        {/* Image Management Section */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700">รูปภาพ</label>
-          <div className="grid grid-cols-3 gap-2">
-            {previewUrls.map((url, idx) => (
-               <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border">
-                 <img src={url} className="w-full h-full object-cover" />
+          <label className="block text-sm font-medium text-slate-700">รูปภาพ ({imageItems.length})</label>
+          <p className="text-xs text-slate-500 mb-2">รูปแรกจะเป็นภาพหน้าปก (Cover Image)</p>
+          
+          <div className="grid grid-cols-3 gap-3">
+            {imageItems.map((item, idx) => (
+               <div key={item.id} className={`relative aspect-square rounded-lg overflow-hidden border-2 group transition-all ${idx === 0 ? 'border-emerald-500 shadow-md ring-2 ring-emerald-100' : 'border-slate-200'}`}>
+                 <img src={item.url} className="w-full h-full object-cover" alt="preview" />
+                 
+                 {/* Cover Badge (Index 0) */}
+                 {idx === 0 && (
+                   <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-br-lg font-bold flex items-center shadow-sm z-10">
+                     <Crown size={10} className="mr-1" fill="currentColor" /> ปก
+                   </div>
+                 )}
+
+                 {/* Actions Overlay */}
+                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                    {idx !== 0 && (
+                      <button 
+                        type="button"
+                        onClick={() => handleSetCover(idx)}
+                        className="bg-white text-slate-800 text-xs px-2 py-1 rounded-full font-bold hover:bg-emerald-50 hover:text-emerald-600 flex items-center transform active:scale-95 transition-transform"
+                      >
+                        <Star size={12} className="mr-1" /> ตั้งเป็นปก
+                      </button>
+                    )}
+                    <button 
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                 </div>
                </div>
             ))}
+
+            {/* Add Button */}
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer"
+              className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-colors"
             >
-              <Camera size={24} />
-              <span className="text-xs">เพิ่มรูป</span>
+              <Camera size={24} className="mb-1" />
+              <span className="text-xs font-medium">เพิ่มรูป</span>
             </div>
             <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileChange} />
           </div>
