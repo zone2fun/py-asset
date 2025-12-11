@@ -82,7 +82,9 @@ const SubmitPropertyPage: React.FC = () => {
 
       // 3. Generate LINE Message
       const mapLink = form.latitude ? `https://maps.google.com/?q=${form.latitude},${form.longitude}` : 'ไม่ระบุ';
-      const galleryLink = imageUrls[0]; // Just show first image link or a text saying "See attachment"
+      
+      // Create a list of all image links
+      const imageLinksText = imageUrls.map((url, index) => `${index + 1}. ${url}`).join('\n');
 
       const message = `
 ฝากขายทรัพย์ (Lead #${leadId})
@@ -93,7 +95,11 @@ const SubmitPropertyPage: React.FC = () => {
 พิกัด: ${mapLink}
 ผู้ติดต่อ: ${form.name} (${form.phone})
 รายละเอียด: ${form.description}
-รูปภาพ: ${galleryLink} (และอีก ${imageUrls.length - 1} รูป)
+
+📂 ลิงก์รูปภาพทั้งหมด (${imageUrls.length} รูป):
+${imageLinksText}
+
+(กรุณากดส่งข้อความนี้ แล้วส่งรูปภาพจากอัลบั้มตามเข้ามาในแชทอีกครั้งเพื่อความสะดวกครับ)
 `.trim();
 
       const encodedMessage = encodeURIComponent(message);

@@ -2,6 +2,7 @@ import React from 'react';
 import { Home, Trees, Building, Search, Megaphone, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PropertyType } from '../types';
+import InstallPWA from '../components/InstallPWA';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,9 @@ const HomePage: React.FC = () => {
                 <Search size={20} className="mr-2 opacity-50" />
                 ค้นหาทรัพย์ทั้งหมด...
             </button>
+            
+            {/* Install PWA Button */}
+            <InstallPWA />
         </div>
       </div>
 
