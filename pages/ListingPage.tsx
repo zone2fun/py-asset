@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter, Loader2 } from 'lucide-react';
+import { ArrowLeft, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
 import { getProperties } from '../services/propertyService';
 import { PropertyType, Property } from '../types';
@@ -14,6 +14,7 @@ const ListingPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<PropertyType | 'All'>(typeParam || 'All');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState<string>('newest');
 
   // Update selected type when URL param changes
   useEffect(() => {
@@ -42,6 +43,30 @@ const ListingPage: React.FC = () => {
     fetchData();
   }, [selectedType]);
 
+  const sortedProperties = useMemo(() => {
+    return [...properties].sort((a, b) => {
+      if (sortOrder === 'price_asc') {
+        return a.price - b.price;
+      }
+      if (sortOrder === 'price_desc') {
+        return b.price - a.price;
+      }
+      // Newest (Default)
+      const getTimestamp = (p: any) => {
+        if (!p.createdAt) return 0;
+        // Firestore Timestamp
+        if (p.createdAt.seconds) return p.createdAt.seconds;
+        // JS Date
+        if (p.createdAt instanceof Date) return p.createdAt.getTime();
+        return 0;
+      };
+      
+      const timeA = getTimestamp(a);
+      const timeB = getTimestamp(b);
+      return timeB - timeA;
+    });
+  }, [properties, sortOrder]);
+
   const handleTypeChange = (type: PropertyType | 'All') => {
       setSelectedType(type);
       if (type === 'All') {
@@ -68,7 +93,7 @@ const ListingPage: React.FC = () => {
       </div>
 
       {/* Filter Chips */}
-      <div className="flex overflow-x-auto px-4 py-3 space-x-2 no-scrollbar bg-white border-b border-slate-100 mb-4 sticky top-[53px] z-30">
+      <div className="flex overflow-x-auto px-4 py-3 space-x-2 no-scrollbar bg-white border-b border-slate-100 sticky top-[53px] z-30">
         {['All', PropertyType.HOUSE, PropertyType.LAND, PropertyType.DORMITORY].map((type) => (
             <button
                 key={type}
@@ -84,15 +109,33 @@ const ListingPage: React.FC = () => {
         ))}
       </div>
 
+      {/* Sorting Control */}
+      <div className="px-4 py-2 flex justify-between items-center bg-slate-50">
+        <span className="text-xs text-slate-500 font-medium">พบ {sortedProperties.length} รายการ</span>
+        <div className="flex items-center space-x-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
+            <ArrowUpDown size={12} className="text-slate-400" />
+            <select 
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none appearance-none pr-4 relative z-10 cursor-pointer"
+                style={{ backgroundImage: 'none' }} 
+            >
+                <option value="newest">ล่าสุด (ใหม่ ➜ เก่า)</option>
+                <option value="price_asc">ราคา (ต่ำ ➜ สูง)</option>
+                <option value="price_desc">ราคา (สูง ➜ ต่ำ)</option>
+            </select>
+        </div>
+      </div>
+
       {/* List */}
-      <div className="px-4 grid grid-cols-2 gap-3">
+      <div className="px-4 grid grid-cols-2 gap-3 mt-2">
         {loading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-20 text-emerald-600">
                 <Loader2 size={32} className="animate-spin mb-2" />
                 <p className="text-sm">กำลังโหลดข้อมูล...</p>
             </div>
-        ) : properties.length > 0 ? (
-            properties.map(property => (
+        ) : sortedProperties.length > 0 ? (
+            sortedProperties.map(property => (
                 <PropertyCard key={property.id} property={property} />
             ))
         ) : (
