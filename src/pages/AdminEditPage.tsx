@@ -66,7 +66,8 @@ const AdminEditPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
+      // Fix: Explicitly cast to File[] to prevent 'unknown' type error in map callback
+      const files = Array.from(e.target.files) as File[];
       const newUrls = files.map(f => URL.createObjectURL(f));
       setNewImages(prev => [...prev, ...files]);
       setPreviewUrls(prev => [...prev, ...newUrls]);

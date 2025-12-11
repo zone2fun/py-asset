@@ -1,10 +1,19 @@
-import { db, storage } from "../firebaseConfig";
+import { db } from "../firebaseConfig";
 import firebase from "firebase/compat/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
 import { MOCK_PROPERTIES } from "../constants";
 
 const COLLECTION_NAME = "properties";
 const SUBMISSION_COLLECTION = "submissions";
+
+// --- CLOUDINARY CONFIG ---
+// 1. สมัครฟรีที่ cloudinary.com
+// 2. ไปที่ Settings > Upload > Add upload preset
+// 3. ตั้งชื่อ Preset, เลือก Signing Mode = "Unsigned" (สำคัญมาก!)
+// 4. นำค่ามาใส่ตรงนี้ครับ
+
+const CLOUD_NAME = "demo"; // เปลี่ยนเป็น Cloud Name ของคุณ (เช่น dxy123abc)
+const UPLOAD_PRESET = "docs_upload_example_us_preset"; // เปลี่ยนเป็น Preset ของคุณ (ต้องเป็น Unsigned)
 
 // --- FETCH DATA ---
 
@@ -106,19 +115,33 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
   return docRef.id;
 };
 
-// --- SUBMISSION ---
+// --- SUBMISSION & UPLOAD ---
 
 export const uploadImages = async (files: File[]): Promise<string[]> => {
-  if (!storage) throw new Error("Storage not initialized");
-
+  // Use Cloudinary for easier CORS handling
   const uploadPromises = files.map(async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET); 
+
     try {
-      const uniqueName = `properties/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
-      const storageRef = storage.ref(uniqueName);
-      const snapshot = await storageRef.put(file);
-      return await snapshot.ref.getDownloadURL();
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Upload failed");
+      }
+
+      return data.secure_url;
     } catch (error) {
-      console.error(`Error uploading file ${file.name}:`, error);
+      console.error("Error uploading to Cloudinary:", error);
       throw error;
     }
   });

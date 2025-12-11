@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Camera, MapPin, Send, Loader2, Home, Trees, Building, X } from 'lucide-react';
 import { SubmissionForm, PropertyType } from '../types';
@@ -34,7 +33,8 @@ const SubmitPropertyPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+      // Fix: Explicitly cast to File[] to prevent 'unknown' type error in map callback
+      const newFiles = Array.from(e.target.files) as File[];
       if (form.images.length + newFiles.length > 10) {
         alert("อัปโหลดได้สูงสุด 10 รูป");
         return;
