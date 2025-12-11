@@ -1,7 +1,6 @@
 import { db } from "../firebaseConfig";
 import firebase from "firebase/compat/app";
 import { Property, PropertyType, SubmissionForm } from "../types";
-import { MOCK_PROPERTIES } from "../constants";
 
 const COLLECTION_NAME = "properties";
 const SUBMISSION_COLLECTION = "submissions";
@@ -17,9 +16,8 @@ const UPLOAD_PRESET = "phayao_upload";
 
 export const getProperties = async (type?: PropertyType | 'All'): Promise<Property[]> => {
   if (!db) {
-    console.warn("Firestore not initialized, falling back to mock data");
-    if (type && type !== 'All') return MOCK_PROPERTIES.filter(p => p.type === type);
-    return MOCK_PROPERTIES;
+    console.warn("Firestore not initialized");
+    return [];
   }
 
   try {
@@ -37,27 +35,15 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
       realProperties.push({ id: doc.id, ...doc.data() } as Property);
     });
 
-    // Merge Real Data with Mock Data
-    let filteredMock = MOCK_PROPERTIES;
-    if (type && type !== 'All') {
-        filteredMock = MOCK_PROPERTIES.filter(p => p.type === type);
-    }
-
-    return [...realProperties, ...filteredMock];
+    return realProperties;
 
   } catch (error) {
-    console.warn("Error fetching properties from Firebase:", error);
-    if (type && type !== 'All') {
-      return MOCK_PROPERTIES.filter(p => p.type === type);
-    }
-    return MOCK_PROPERTIES;
+    console.error("Error fetching properties from Firebase:", error);
+    return [];
   }
 };
 
 export const getPropertyById = async (id: string): Promise<Property | undefined> => {
-  const mockProp = MOCK_PROPERTIES.find(p => p.id === id);
-  if (mockProp) return mockProp;
-
   if (!db) return undefined;
 
   try {
