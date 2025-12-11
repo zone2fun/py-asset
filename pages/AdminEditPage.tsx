@@ -1,8 +1,40 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix for default marker icon in Leaflet with React
+const icon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Component to handle map clicks and update coordinates
+const LocationMarker = ({ position, onLocationSelect }: { position: { lat: number; lng: number } | null, onLocationSelect: (lat: number, lng: number) => void }) => {
+  const map = useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, map.getZoom());
+    }
+  }, [position, map]);
+
+  return position === null ? null : (
+    <Marker position={position} icon={icon} />
+  );
+};
 
 const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // If id exists = Edit, else = Add
@@ -13,6 +45,10 @@ const AdminEditPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
+  const [gettingLoc, setGettingLoc] = useState(false);
+
+  // Default center for Phayao
+  const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
 
   // We use SubmissionForm type for state because it matches the input fields nicely
   const [form, setForm] = useState<SubmissionForm>({
@@ -71,6 +107,29 @@ const AdminEditPage: React.FC = () => {
       const newUrls = files.map(f => URL.createObjectURL(f));
       setNewImages(prev => [...prev, ...files]);
       setPreviewUrls(prev => [...prev, ...newUrls]);
+    }
+  };
+
+  const getCurrentLocation = () => {
+    setGettingLoc(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setForm(prev => ({ 
+            ...prev, 
+            latitude: pos.coords.latitude, 
+            longitude: pos.coords.longitude 
+          }));
+          setGettingLoc(false);
+        },
+        (err) => {
+          alert("ไม่สามารถดึงตำแหน่งได้: " + err.message);
+          setGettingLoc(false);
+        }
+      );
+    } else {
+      alert("Browser นี้ไม่รองรับ Geolocation");
+      setGettingLoc(false);
     }
   };
 
@@ -202,35 +261,65 @@ const AdminEditPage: React.FC = () => {
           />
         </div>
 
-        {/* Coords (Simplified for Admin) */}
-        <div className="grid grid-cols-2 gap-4">
-           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-1">Lat</label>
-             <input 
-                type="number" step="any" name="latitude" value={form.latitude !== null ? form.latitude : ''} 
-                onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    setForm({...form, latitude: isNaN(val) ? null : val});
-                }}
-                className="w-full p-3 border rounded-xl"
-             />
-           </div>
-           <div>
-             <label className="block text-sm font-medium text-slate-700 mb-1">Lng</label>
-             <input 
-                type="number" step="any" name="longitude" value={form.longitude !== null ? form.longitude : ''} 
-                onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    setForm({...form, longitude: isNaN(val) ? null : val});
-                }}
-                className="w-full p-3 border rounded-xl"
-             />
-           </div>
+        {/* Map Picker Section */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+             <label className="block text-sm font-medium text-slate-700">พิกัดแผนที่ (Lat/Lng)</label>
+             <button 
+                type="button" 
+                onClick={getCurrentLocation}
+                className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-bold flex items-center hover:bg-blue-100 transition-colors"
+             >
+                {gettingLoc ? <Loader2 size={12} className="animate-spin mr-1" /> : <Navigation size={12} className="mr-1" />}
+                ระบุตำแหน่งปัจจุบัน
+             </button>
+          </div>
+
+          <div className="h-64 rounded-xl overflow-hidden border border-slate-200 z-0 relative shadow-inner">
+             <MapContainer 
+                center={form.latitude && form.longitude ? [form.latitude, form.longitude] : [PHAYAO_CENTER.lat, PHAYAO_CENTER.lng]} 
+                zoom={13} 
+                scrollWheelZoom={false} 
+                style={{ height: '100%', width: '100%' }}
+             >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker 
+                   position={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : null}
+                   onLocationSelect={(lat, lng) => setForm(prev => ({ ...prev, latitude: lat, longitude: lng }))}
+                />
+             </MapContainer>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+               <input 
+                  type="number" step="any" placeholder="Latitude" name="latitude" value={form.latitude !== null ? form.latitude : ''} 
+                  onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setForm({...form, latitude: isNaN(val) ? null : val});
+                  }}
+                  className="w-full p-3 border rounded-xl bg-slate-50 text-sm"
+               />
+             </div>
+             <div>
+               <input 
+                  type="number" step="any" placeholder="Longitude" name="longitude" value={form.longitude !== null ? form.longitude : ''} 
+                  onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setForm({...form, longitude: isNaN(val) ? null : val});
+                  }}
+                  className="w-full p-3 border rounded-xl bg-slate-50 text-sm"
+               />
+             </div>
+          </div>
         </div>
 
         <button 
           type="submit" disabled={submitting}
-          className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg flex justify-center"
+          className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg flex justify-center mt-6"
         >
           {submitting ? <Loader2 className="animate-spin" /> : <><Save className="mr-2" /> บันทึกข้อมูล</>}
         </button>

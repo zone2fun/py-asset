@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     <title>Phayao Asset Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
       /* Smooth scrolling */
       html {
@@ -18,6 +19,10 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      /* Fix Leaflet z-index issues */
+      .leaflet-pane {
+        z-index: 0;
+      }
     </style>
   <script type="importmap">
 {
@@ -29,7 +34,9 @@
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
     "vite": "https://aistudiocdn.com/vite@^7.2.7",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "leaflet": "https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js",
+    "react-leaflet": "https://aistudiocdn.com/react-leaflet@^4.2.1"
   }
 }
 </script>
