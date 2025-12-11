@@ -22,7 +22,7 @@ export interface Property {
   contactName?: string;
   contactPhone?: string;
   createdAt?: any;
-  status?: string;
+  status?: string; // 'active' | 'sold'
 }
 
 export interface SubmissionForm {
@@ -36,4 +36,5 @@ export interface SubmissionForm {
   latitude: number | null;
   longitude: number | null;
   images: File[];
+  status: string; // Added status field
 }

@@ -92,7 +92,7 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
       lng: form.longitude
     } : null,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: 'active'
+    status: form.status || 'active' // Use form status
   };
 
   const docRef = await db.collection(COLLECTION_NAME).add(propertyData);

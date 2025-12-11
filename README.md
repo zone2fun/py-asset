@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Phayao Asset Hub (อสังหาฯ พะเยา)
 
-This contains everything you need to run your app locally.
+Web application for browsing and submitting real estate properties in Phayao, Thailand.
+Built with React, Tailwind CSS, and Firebase (Firestore + Cloudinary).
 
-View your app in AI Studio: https://ai.studio/apps/drive/1rfh0W70q9kxw1aGzgKViWGIiYtP1U0ta
+## Features
 
-## Run Locally
+- **Property Listing**: Browse houses, land, and dormitories.
+- **Filtering**: Filter properties by type.
+- **Property Details**: View price, location map, size, and image gallery.
+- **Admin System**: Manage property listings (Add/Edit/Delete).
+- **Line Integration**: Direct contact via LINE OA.
+- **PWA Support**: Installable on mobile devices.
 
-**Prerequisites:**  Node.js
+## Tech Stack
 
+- **Frontend**: React (Vite)
+- **Styling**: Tailwind CSS
+- **Database**: Firebase Firestore
+- **Storage**: Cloudinary (for images)
+- **Maps**: Leaflet (OpenStreetMap)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Setup & Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file based on your Firebase/Cloudinary credentials (see `firebaseConfig.ts` and `services/propertyService.ts`).
+4. Run locally:
+   ```bash
+   npm run dev
+   ```
+
+## Admin Access
+
+- **URL**: `/login`
+- **Default Credentials**: `admin` / `1234`
+
+## Deployment
+
+This project is optimized for deployment on Vercel.
+
+1. Connect your GitHub repository to Vercel.
+2. Vercel will detect Vite and build automatically.
+3. Ensure Environment Variables are set if you decide to move credentials out of the code.
+
+## License
+
+Private / Proprietary

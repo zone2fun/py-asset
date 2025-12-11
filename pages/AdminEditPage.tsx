@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation, Search } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation, Search, CheckCircle, XCircle } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -87,7 +87,8 @@ const AdminEditPage: React.FC = () => {
     phone: '0614544516',
     latitude: null,
     longitude: null,
-    images: [] // Used only for tracking new files
+    images: [], // Used only for tracking new files
+    status: 'active' // Default status
   });
 
   const isEditMode = !!id;
@@ -112,7 +113,8 @@ const AdminEditPage: React.FC = () => {
         phone: '0614544516',
         latitude: prop.coordinates?.lat || null,
         longitude: prop.coordinates?.lng || null,
-        images: []
+        images: [],
+        status: prop.status || 'active'
       });
       // Set existing images
       const existingImages = prop.images && prop.images.length > 0 ? prop.images : [prop.image];
@@ -193,6 +195,13 @@ const AdminEditPage: React.FC = () => {
     }
   };
 
+  const toggleStatus = () => {
+    setForm(prev => ({
+      ...prev,
+      status: prev.status === 'active' ? 'sold' : 'active'
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirm(isEditMode ? 'บันทึกการแก้ไข?' : 'เพิ่มทรัพย์ใหม่?')) return;
@@ -225,7 +234,8 @@ const AdminEditPage: React.FC = () => {
           description: form.description,
           image: finalImages[0] || '',
           images: finalImages,
-          coordinates: coordinates
+          coordinates: coordinates,
+          status: form.status
         });
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
@@ -254,10 +264,29 @@ const AdminEditPage: React.FC = () => {
         <button onClick={() => navigate('/admin')} className="mr-3">
           <ArrowLeft />
         </button>
-        <h1 className="font-bold text-lg">{isEditMode ? 'แก้ไขทรัพย์' : 'เพิ่มทรัพย์ใหม่'}</h1>
+        <h1 className="font-bold text-lg">{isEditMode ? 'แก้ไขทรัพย์ 🇹🇭' : 'เพิ่มทรัพย์ใหม่'}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
+        {/* Status Toggle */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span className="block text-sm font-bold text-slate-800">สถานะประกาศ</span>
+                <span className={`text-xs ${form.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
+                    {form.status === 'active' ? 'กำลังขาย (Active)' : 'ปิดการขายแล้ว (Sold)'}
+                </span>
+            </div>
+            <button 
+                type="button" 
+                onClick={toggleStatus}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none ${form.status === 'active' ? 'bg-green-500' : 'bg-slate-300'}`}
+            >
+                <span 
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.status === 'active' ? 'translate-x-7' : 'translate-x-1'}`} 
+                />
+            </button>
+        </div>
         
         {/* Images */}
         <div className="space-y-2">
