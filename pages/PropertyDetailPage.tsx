@@ -29,6 +29,7 @@ const PropertyDetailPage: React.FC = () => {
   }, [id]);
 
   const allImages = property ? [property.image, ...(property.images || [])] : [];
+  const isSold = property?.status === 'sold';
 
   const handleNextImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -106,10 +107,10 @@ const PropertyDetailPage: React.FC = () => {
             <img 
                 src={allImages[currentImageIndex]} 
                 alt={property.title} 
-                className="w-full h-full object-cover transition-opacity duration-300" 
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isSold ? 'grayscale' : ''}`} 
             />
             
-            {/* Arrows (Hidden on mobile by default, shown on hover/desktop or always if preferred) */}
+            {/* Arrows */}
             {allImages.length > 1 && (
                 <>
                     <button 
@@ -156,10 +157,18 @@ const PropertyDetailPage: React.FC = () => {
             <Share2 size={24} />
         </button>
 
+        {/* Title Overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12 z-10">
-            <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded mb-2 inline-block">
-                {property.type}
-            </span>
+            <div className="flex items-center gap-2 mb-2">
+                <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded inline-block">
+                    {property.type}
+                </span>
+                {isSold && (
+                    <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded inline-block">
+                        ปิดการขายแล้ว
+                    </span>
+                )}
+            </div>
             <h1 className="text-white text-xl font-bold leading-tight shadow-black drop-shadow-md">
                 {property.title}
             </h1>
@@ -173,7 +182,10 @@ const PropertyDetailPage: React.FC = () => {
         <div className="flex items-baseline justify-between mb-6 border-b border-slate-200 pb-4">
             <div>
                 <span className="text-slate-500 text-sm block mb-1">ราคาขาย</span>
-                <span className="text-3xl font-bold text-emerald-600">฿{property.price.toLocaleString()}</span>
+                <span className={`text-3xl font-bold ${isSold ? 'text-slate-500 line-through' : 'text-emerald-600'}`}>
+                    ฿{property.price.toLocaleString()}
+                </span>
+                {isSold && <span className="text-red-600 font-bold ml-2">(ขายแล้ว)</span>}
             </div>
         </div>
 
@@ -247,11 +259,16 @@ const PropertyDetailPage: React.FC = () => {
       {/* Floating Action Button */}
       <div className="fixed bottom-20 left-4 right-4 z-40">
         <button 
-            onClick={() => window.open(getPropertyInquiryUrl(property), '_blank')}
-            className="w-full bg-[#06C755] hover:bg-[#05b64d] text-white font-bold py-3.5 px-6 rounded-full shadow-lg flex items-center justify-center text-lg transition-transform active:scale-95"
+            onClick={() => !isSold && window.open(getPropertyInquiryUrl(property), '_blank')}
+            disabled={isSold}
+            className={`w-full font-bold py-3.5 px-6 rounded-full shadow-lg flex items-center justify-center text-lg transition-transform active:scale-95 ${
+                isSold 
+                ? 'bg-slate-400 text-white cursor-not-allowed' 
+                : 'bg-[#06C755] hover:bg-[#05b64d] text-white'
+            }`}
         >
             <MessageCircle size={24} className="mr-2" />
-            ทักไลน์สอบถาม
+            {isSold ? 'ปิดการขายแล้ว' : 'ทักไลน์สอบถาม'}
         </button>
       </div>
 
