@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Loader2, Camera, MapPin, Navigation, Search } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
@@ -17,13 +17,28 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Component to handle map clicks and update coordinates
+// Component to handle map clicks, drags, and update coordinates
 const LocationMarker = ({ position, onLocationSelect }: { position: { lat: number; lng: number } | null, onLocationSelect: (lat: number, lng: number) => void }) => {
   const map = useMapEvents({
     click(e) {
       onLocationSelect(e.latlng.lat, e.latlng.lng);
     },
   });
+
+  const markerRef = useRef<L.Marker>(null);
+
+  const eventHandlers = useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker) {
+          const { lat, lng } = marker.getLatLng();
+          onLocationSelect(lat, lng);
+        }
+      },
+    }),
+    [onLocationSelect],
+  );
 
   useEffect(() => {
     if (position) {
@@ -32,7 +47,13 @@ const LocationMarker = ({ position, onLocationSelect }: { position: { lat: numbe
   }, [position, map]);
 
   return position === null ? null : (
-    <Marker position={position} icon={icon} />
+    <Marker 
+      draggable={true}
+      eventHandlers={eventHandlers}
+      position={position} 
+      icon={icon} 
+      ref={markerRef}
+    />
   );
 };
 
@@ -141,16 +162,27 @@ const AdminEditPage: React.FC = () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
+      // 1. เพิ่ม Context การค้นหาถ้าผู้ใช้ไม่ได้ระบุจังหวัด/ประเทศ
+      let finalQuery = searchQuery;
+      // ถ้าไม่มีคำว่า Phayao หรือ พะเยา ให้เติมต่อท้าย
+      if (!finalQuery.toLowerCase().includes('phayao') && !finalQuery.includes('พะเยา')) {
+        finalQuery += ' Phayao Thailand'; // เน้นพะเยา
+      }
+
       // Use Nominatim API (OpenStreetMap)
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(finalQuery)}&limit=1`);
       const data = await response.json();
       
       if (data && data.length > 0) {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
+        
+        // แจ้งผู้ใช้ว่าเจอที่ไหน เพื่อความชัวร์
+        alert(`พบตำแหน่ง: ${data[0].display_name}\n(ถ้าไม่ตรง สามารถลากหมุดบนแผนที่ได้เลย)`);
+        
         setForm(prev => ({ ...prev, latitude: lat, longitude: lon }));
       } else {
-        alert("ไม่พบสถานที่นี้ ลองระบุชื่อให้ชัดเจนขึ้น (เช่น เพิ่มคำว่า พะเยา)");
+        alert("ไม่พบสถานที่นี้ ลองระบุชื่อสถานที่ + ตำบล/อำเภอ ให้ชัดเจนขึ้น");
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -306,7 +338,7 @@ const AdminEditPage: React.FC = () => {
           <div className="flex space-x-2">
             <input 
               type="text" 
-              placeholder="ค้นหาสถานที่ (เช่น โลตัส พะเยา)" 
+              placeholder="ค้นหาสถานที่ (ระบบจะเติม 'พะเยา' ให้อัตโนมัติ)" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchLocation())}
@@ -321,6 +353,8 @@ const AdminEditPage: React.FC = () => {
               {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
             </button>
           </div>
+          
+          <p className="text-xs text-slate-500">* ทิป: ค้นหาเสร็จแล้ว สามารถกดค้างที่หมุดแล้วลากเพื่อปรับตำแหน่งให้ตรงเป๊ะได้</p>
 
           <div className="h-64 rounded-xl overflow-hidden border border-slate-200 z-0 relative shadow-inner">
              <MapContainer 
