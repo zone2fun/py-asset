@@ -9,7 +9,7 @@ import { GoogleGenAI } from "@google/genai";
 // 🔑 Google Maps Configuration
 // กรุณาใส่ API KEY ของคุณที่นี่ เพื่อให้แผนที่แสดงผลได้ถูกต้อง
 // ==================================================================================
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE'; 
+const GOOGLE_MAPS_API_KEY: string = 'AIzaSyCpFgVS3VZn5UOeOc9waxkJeaWR-H6wH4o'; 
 // ==================================================================================
 
 // Extend Window interface for Google Maps
