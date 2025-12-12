@@ -324,6 +324,11 @@ const AdminEditPage: React.FC = () => {
 
     setGeneratingAI(true);
     try {
+      // Check for API Key explicitly
+      if (!process.env.API_KEY) {
+         throw new Error("ไม่พบ API Key สำหรับ AI (process.env.API_KEY) กรุณาตรวจสอบการตั้งค่า .env");
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
         คุณคือนักเขียนโฆษณาขายอสังหาริมทรัพย์มืออาชีพในไทย
