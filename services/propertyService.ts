@@ -14,7 +14,7 @@ const UPLOAD_PRESET = "phayao_upload";
 
 // --- FETCH DATA ---
 
-export const getProperties = async (type?: PropertyType | 'All'): Promise<Property[]> => {
+export const getProperties = async (type?: PropertyType | 'All' | 'VIDEO'): Promise<Property[]> => {
   if (!db) {
     console.warn("Firestore not initialized");
     return [];
@@ -24,8 +24,12 @@ export const getProperties = async (type?: PropertyType | 'All'): Promise<Proper
     // Try to fetch from Firestore
     let query: firebase.firestore.Query = db.collection(COLLECTION_NAME);
     
-    if (type && type !== 'All') {
-      query = query.where("type", "==", type);
+    if (type === 'VIDEO') {
+        // Filter by content type video
+        query = query.where("contentType", "==", "video");
+    } else if (type && type !== 'All') {
+        // Filter by Property Type (House, Land, Dorm)
+        query = query.where("type", "==", type);
     }
 
     const querySnapshot = await query.get();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter, Loader2, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Filter, Loader2, ArrowUpDown, Video } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
 import { getProperties } from '../services/propertyService';
 import { PropertyType, Property } from '../types';
@@ -10,16 +10,16 @@ const ListingPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  const typeParam = searchParams.get('type') as PropertyType | null;
+  const typeParam = searchParams.get('type') as PropertyType | 'VIDEO' | null;
 
-  const [selectedType, setSelectedType] = useState<PropertyType | 'All'>(typeParam || 'All');
+  const [selectedType, setSelectedType] = useState<PropertyType | 'All' | 'VIDEO'>(typeParam || 'All');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState<string>('newest');
 
   // Update selected type when URL param changes
   useEffect(() => {
-    const currentType = new URLSearchParams(location.search).get('type') as PropertyType | null;
+    const currentType = new URLSearchParams(location.search).get('type') as PropertyType | 'VIDEO' | null;
     if (currentType) {
       setSelectedType(currentType);
     } else {
@@ -68,7 +68,7 @@ const ListingPage: React.FC = () => {
     });
   }, [properties, sortOrder]);
 
-  const handleTypeChange = (type: PropertyType | 'All') => {
+  const handleTypeChange = (type: PropertyType | 'All' | 'VIDEO') => {
       setSelectedType(type);
       if (type === 'All') {
           navigate('/list');
@@ -79,7 +79,13 @@ const ListingPage: React.FC = () => {
 
   // Dynamic SEO Generator
   const getSEO = () => {
-      if (selectedType === PropertyType.HOUSE) {
+      if (selectedType === 'VIDEO') {
+          return {
+              title: "วิดีโอรีวิวบ้านและที่ดินพะเยา - ดูของจริงก่อนตัดสินใจ",
+              desc: "รวมคลิปวิดีโอรีวิวบ้าน ที่ดิน หอพัก ในจังหวัดพะเยา พาชมทุกซอกทุกมุม เหมือนไปดูด้วยตัวเอง",
+              kw: "รีวิวบ้านพะเยา, วิดีโอขายบ้าน, คลิปขายที่ดิน"
+          };
+      } else if (selectedType === PropertyType.HOUSE) {
           return {
               title: "ขายบ้านพะเยา บ้านมือสอง ราคาถูก",
               desc: "รวมประกาศขายบ้านพะเยา บ้านเดี่ยว ทาวน์โฮม บ้านมือสองสภาพดี ในอำเภอเมือง แม่ใจ เชียงคำ และทั่วจังหวัดพะเยา",
@@ -107,6 +113,14 @@ const ListingPage: React.FC = () => {
 
   const seoData = getSEO();
 
+  const filterOptions = [
+      { id: 'All', label: 'ทั้งหมด', icon: null },
+      { id: 'VIDEO', label: 'วิดีโอรีวิว', icon: <Video size={16} className="mr-1"/> },
+      { id: PropertyType.HOUSE, label: PropertyType.HOUSE, icon: null },
+      { id: PropertyType.LAND, label: PropertyType.LAND, icon: null },
+      { id: PropertyType.DORMITORY, label: PropertyType.DORMITORY, icon: null },
+  ];
+
   return (
     <div className="min-h-screen pb-24 md:pb-12 bg-slate-50">
       <SEO 
@@ -126,7 +140,7 @@ const ListingPage: React.FC = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <h1 className="font-bold text-xl text-slate-800">
-                        {selectedType === 'All' ? 'รายการทรัพย์ทั้งหมด' : selectedType}
+                        {selectedType === 'All' ? 'รายการทรัพย์ทั้งหมด' : (selectedType === 'VIDEO' ? 'วิดีโอรีวิว' : selectedType)}
                     </h1>
                     <span className="hidden md:inline-block ml-3 text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                         {sortedProperties.length} รายการ
@@ -136,23 +150,24 @@ const ListingPage: React.FC = () => {
                 <div className="flex items-center justify-between gap-3">
                     {/* Filter Chips */}
                     <div className="flex overflow-x-auto no-scrollbar space-x-2 pb-1 md:pb-0">
-                        {['All', PropertyType.HOUSE, PropertyType.LAND, PropertyType.DORMITORY].map((type) => (
+                        {filterOptions.map((opt) => (
                             <button
-                                key={type}
-                                onClick={() => handleTypeChange(type as PropertyType | 'All')}
-                                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
-                                    selectedType === type 
-                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                                key={opt.id}
+                                onClick={() => handleTypeChange(opt.id as any)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border flex items-center ${
+                                    selectedType === opt.id 
+                                    ? (opt.id === 'VIDEO' ? 'bg-red-600 border-red-600 text-white shadow-sm' : 'bg-emerald-600 border-emerald-600 text-white shadow-sm')
                                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                                 }`}
                             >
-                                {type === 'All' ? 'ทั้งหมด' : type}
+                                {opt.icon}
+                                {opt.label}
                             </button>
                         ))}
                     </div>
 
                     {/* Sorting Control */}
-                    <div className="flex items-center space-x-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm ml-auto">
+                    <div className="flex items-center space-x-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm ml-auto flex-shrink-0">
                         <ArrowUpDown size={14} className="text-slate-400" />
                         <select 
                             value={sortOrder}
