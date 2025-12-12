@@ -283,9 +283,9 @@ const AdminEditPage: React.FC = () => {
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
           const file = e.target.files[0];
-          // Simple validation
-          if (file.size > 100 * 1024 * 1024) { // 100MB
-              alert("ไฟล์วิดีโอใหญ่เกินไป (จำกัด 100MB)");
+          // UPDATE: Increased limit to 500MB
+          if (file.size > 500 * 1024 * 1024) { // 500MB
+              alert("ไฟล์วิดีโอใหญ่เกินไป (จำกัด 500MB)");
               return;
           }
           setVideoFile(file);
@@ -505,7 +505,7 @@ const AdminEditPage: React.FC = () => {
   if (loading) return <div className="p-10 text-center"><Loader2 className="animate-spin inline" /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-slate-50 pb-32">
       {/* Top Bar */}
       <div className="bg-slate-800 text-white px-6 py-4 sticky top-0 z-50 flex items-center justify-between shadow-md">
         <div className="flex items-center">
@@ -689,7 +689,7 @@ const AdminEditPage: React.FC = () => {
                             >
                                 <Film size={32} className="mb-2 opacity-50" />
                                 <span className="text-sm font-medium">อัปโหลดวิดีโอ</span>
-                                <span className="text-[10px] opacity-70 mt-1">MP4, MOV (max 100MB)</span>
+                                <span className="text-[10px] opacity-70 mt-1">MP4, MOV (max 500MB)</span>
                             </div>
                         )}
                         <input type="file" ref={videoInputRef} hidden accept="video/*" onChange={handleVideoFileChange} />
@@ -860,7 +860,7 @@ const AdminEditPage: React.FC = () => {
         </form>
 
         {/* Mobile Save Button (Sticky Bottom) */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-40">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-[60]">
             <button 
                 onClick={(e) => handleSubmit(e as any)}
                 disabled={submitting}
