@@ -25,14 +25,14 @@ const SEO: React.FC<SEOProps> = ({
   // Parse URL parameters for "Instant Metadata" (Optimization for CSR sharing)
   const searchParams = new URLSearchParams(location.search);
   
-  const siteTitle = "Phayao Asset Hub - ศูนย์รวมบ้านและที่ดินพะเยา";
+  const siteTitle = "PhayaoHome.com - ศูนย์รวมบ้านและที่ดินพะเยา";
   const defaultDescription = "ค้นหาบ้าน ที่ดิน หอพัก และอสังหาริมทรัพย์ในจังหวัดพะเยา ราคาถูก ทำเลดี เจ้าของขายเอง";
   const defaultKeywords = "ขายบ้านพะเยา, ที่ดินพะเยา, บ้านมือสอง, หอพักพะเยา, อสังหาพะเยา";
   const siteUrl = window.location.origin;
   const defaultImage = "https://cdn-icons-png.flaticon.com/512/2237/2237533.png";
 
   // Priority: 1. URL Params (Fastest for bots) -> 2. Props (Real data) -> 3. Defaults
-  const metaTitle = searchParams.get('og_title') || (title ? `${title} | Phayao Asset Hub` : siteTitle);
+  const metaTitle = searchParams.get('og_title') || (title ? `${title} | PhayaoHome.com` : siteTitle);
   const metaDescription = searchParams.get('og_desc') || description || defaultDescription;
   const metaImage = searchParams.get('og_image') || image || defaultImage;
   const metaUrl = url || window.location.href;
@@ -47,7 +47,7 @@ const SEO: React.FC<SEOProps> = ({
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "name": "Phayao Asset Hub",
+    "name": "PhayaoHome.com",
     "image": metaImage,
     "description": metaDescription,
     "address": {
@@ -75,7 +75,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="keywords" content={keywords || defaultKeywords} />
 
       {/* Open Graph / Facebook */}
-      <meta property="og:site_name" content="Phayao Asset Hub" />
+      <meta property="og:site_name" content="PhayaoHome.com" />
       <meta property="og:type" content={metaType} />
       <meta property="og:url" content={metaUrl} />
       <meta property="og:title" content={metaTitle} />

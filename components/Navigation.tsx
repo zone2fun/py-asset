@@ -14,7 +14,7 @@ const Navigation: React.FC = () => {
           <div className="bg-emerald-100 p-2 rounded-lg">
             <Building2 size={24} />
           </div>
-          <span className="font-bold text-xl tracking-tight">Phayao Asset Hub</span>
+          <span className="font-bold text-xl tracking-tight">PhayaoHome.com</span>
         </Link>
 
         <div className="flex items-center space-x-8">

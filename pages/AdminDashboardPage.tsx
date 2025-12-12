@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, LogOut, Loader2, Users, LayoutDashboard } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Loader2, Users, LayoutDashboard, Video, Star, CheckCircle } from 'lucide-react';
 import { logout } from '../services/authService';
 import { getProperties, deleteProperty } from '../services/propertyService';
 import { Property } from '../types';
@@ -9,6 +9,7 @@ const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'All' | 'Video' | 'Recommended' | 'Sold'>('All');
 
   useEffect(() => {
     loadProperties();
@@ -38,6 +39,14 @@ const AdminDashboardPage: React.FC = () => {
       }
     }
   };
+
+  const filteredProperties = properties.filter(p => {
+    if (filter === 'All') return true;
+    if (filter === 'Video') return p.contentType === 'video';
+    if (filter === 'Recommended') return p.isRecommended;
+    if (filter === 'Sold') return p.status === 'sold';
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
@@ -71,16 +80,59 @@ const AdminDashboardPage: React.FC = () => {
             </button>
         </div>
 
-        <h2 className="text-slate-700 font-bold text-xl mb-4">ประกาศขายบนหน้าเว็บ ({properties.length})</h2>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+            <h2 className="text-slate-700 font-bold text-xl">
+                {filter === 'All' ? 'ประกาศทั้งหมด' : 
+                 filter === 'Video' ? 'วิดีโอรีวิว' :
+                 filter === 'Recommended' ? 'ทรัพย์น่าซื้อ (แนะนำ)' : 'รายการที่ขายแล้ว'} 
+                <span className="ml-2 text-sm bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{filteredProperties.length}</span>
+            </h2>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2">
+                <button
+                    onClick={() => setFilter('All')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${filter === 'All' ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                >
+                    ทั้งหมด
+                </button>
+                <button
+                    onClick={() => setFilter('Video')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border flex items-center ${filter === 'Video' ? 'bg-red-600 border-red-600 text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                >
+                    <Video size={14} className="mr-1" /> รีวิว
+                </button>
+                <button
+                    onClick={() => setFilter('Recommended')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border flex items-center ${filter === 'Recommended' ? 'bg-yellow-500 border-yellow-500 text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                >
+                    <Star size={14} className="mr-1" /> น่าซื้อ
+                </button>
+                <button
+                    onClick={() => setFilter('Sold')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border flex items-center ${filter === 'Sold' ? 'bg-slate-500 border-slate-500 text-white' : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                >
+                    <CheckCircle size={14} className="mr-1" /> ขายแล้ว
+                </button>
+            </div>
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-emerald-600" size={32} />
           </div>
+        ) : filteredProperties.length === 0 ? (
+           <div className="text-center py-12 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">
+               <p>ไม่พบรายการในหมวดนี้</p>
+               <button onClick={() => setFilter('All')} className="text-emerald-600 font-bold text-sm mt-2 hover:underline">ดูทั้งหมด</button>
+           </div>
         ) : (
           <div className="space-y-4">
-            {properties.map((p) => {
+            {filteredProperties.map((p) => {
               const isSold = p.status === 'sold';
+              const isRec = p.isRecommended;
+              const isVideo = p.contentType === 'video';
+              
               return (
                 <div key={p.id} className={`bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 items-center ${isSold ? 'bg-slate-50' : ''} hover:border-emerald-200 transition-colors`}>
                   <div className="relative w-24 h-24 flex-shrink-0">
@@ -94,18 +146,28 @@ const AdminDashboardPage: React.FC = () => {
                         <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold">SOLD</span>
                       </div>
                     )}
+                    {/* Status Icons Overlay */}
+                    <div className="absolute top-1 left-1 flex flex-col gap-1">
+                        {isRec && !isSold && <div className="bg-yellow-400 text-white p-1 rounded-full shadow-sm"><Star size={10} fill="currentColor" /></div>}
+                        {isVideo && <div className="bg-red-600 text-white p-1 rounded-full shadow-sm"><Video size={10} fill="currentColor" /></div>}
+                    </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="flex gap-1 flex-wrap items-center">
                         <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md whitespace-nowrap border border-slate-200 font-medium">
                           {p.type}
                         </span>
-                        {isSold && (
-                          <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-bold whitespace-nowrap border border-red-200">
-                            ขายแล้ว
-                          </span>
+                        {isRec && (
+                            <span className="text-[10px] flex items-center bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200 font-bold">
+                                <Star size={10} className="mr-1" /> แนะนำ
+                            </span>
+                        )}
+                        {isVideo && (
+                            <span className="text-[10px] flex items-center bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200 font-bold">
+                                <Video size={10} className="mr-1" /> รีวิว
+                            </span>
                         )}
                       </div>
                       <span className={`font-bold text-lg ${isSold ? 'text-slate-400 line-through' : 'text-emerald-600'}`}>
