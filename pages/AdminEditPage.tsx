@@ -7,7 +7,6 @@ import { GoogleGenAI } from "@google/genai";
 
 // ==================================================================================
 // 🔑 Google Maps Configuration
-// กรุณาใส่ API KEY ของคุณที่นี่ เพื่อให้แผนที่แสดงผลได้ถูกต้อง
 // ==================================================================================
 const GOOGLE_MAPS_API_KEY: string = 'AIzaSyCpFgVS3VZn5UOeOc9waxkJeaWR-H6wH4o'; 
 // ==================================================================================
@@ -17,6 +16,7 @@ declare global {
   interface Window {
     google: any;
     initMap: () => void;
+    gm_authFailure?: () => void; // Add auth failure handler type
   }
 }
 
@@ -55,6 +55,7 @@ const AdminEditPage: React.FC = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('เมืองพะเยา');
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [markerInstance, setMarkerInstance] = useState<any>(null);
+  const [mapError, setMapError] = useState<string | null>(null); // State for map errors
 
   const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
 
@@ -76,6 +77,12 @@ const AdminEditPage: React.FC = () => {
 
   // 1. Initialize Google Maps Script
   useEffect(() => {
+    // Define global handler for auth failure (invalid key/referer)
+    window.gm_authFailure = () => {
+      setMapError("Google Maps Error: API Key ไม่ถูกต้อง หรือไม่ได้อนุญาต URL นี้ (RefererNotAllowed)");
+      console.error("Google Maps Auth Failure");
+    };
+
     const loadGoogleMaps = () => {
       if (window.google) {
         initMap();
@@ -91,58 +98,69 @@ const AdminEditPage: React.FC = () => {
       script.async = true;
       script.defer = true;
       script.onload = () => initMap();
+      script.onerror = () => setMapError("ไม่สามารถโหลด Google Maps Script ได้");
       document.head.appendChild(script);
     };
 
     loadGoogleMaps();
+
+    return () => {
+      // Cleanup
+      window.gm_authFailure = undefined;
+    };
   }, []);
 
   // 2. Initialize Map Instance
   const initMap = () => {
     if (!mapRef.current || !window.google) return;
 
-    const initialPos = (form.latitude && form.longitude) 
-      ? { lat: form.latitude, lng: form.longitude }
-      : PHAYAO_CENTER;
+    try {
+      const initialPos = (form.latitude && form.longitude) 
+        ? { lat: form.latitude, lng: form.longitude }
+        : PHAYAO_CENTER;
 
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: initialPos,
-      zoom: 13,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-    });
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: initialPos,
+        zoom: 13,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
 
-    const marker = new window.google.maps.Marker({
-      position: initialPos,
-      map: map,
-      draggable: true,
-      animation: window.google.maps.Animation.DROP,
-    });
+      const marker = new window.google.maps.Marker({
+        position: initialPos,
+        map: map,
+        draggable: true,
+        animation: window.google.maps.Animation.DROP,
+      });
 
-    // Add drag listener
-    marker.addListener('dragend', () => {
-      const pos = marker.getPosition();
-      setForm(prev => ({
-        ...prev,
-        latitude: pos.lat(),
-        longitude: pos.lng()
-      }));
-    });
+      // Add drag listener
+      marker.addListener('dragend', () => {
+        const pos = marker.getPosition();
+        setForm(prev => ({
+          ...prev,
+          latitude: pos.lat(),
+          longitude: pos.lng()
+        }));
+      });
 
-    // Add click listener
-    map.addListener('click', (e: any) => {
-      const pos = e.latLng;
-      marker.setPosition(pos);
-      setForm(prev => ({
-        ...prev,
-        latitude: pos.lat(),
-        longitude: pos.lng()
-      }));
-    });
+      // Add click listener
+      map.addListener('click', (e: any) => {
+        const pos = e.latLng;
+        marker.setPosition(pos);
+        setForm(prev => ({
+          ...prev,
+          latitude: pos.lat(),
+          longitude: pos.lng()
+        }));
+      });
 
-    setMapInstance(map);
-    setMarkerInstance(marker);
+      setMapInstance(map);
+      setMarkerInstance(marker);
+    } catch (e) {
+      console.error("Error initializing map:", e);
+      setMapError("เกิดข้อผิดพลาดในการแสดงแผนที่");
+    }
   };
 
   // 3. Update Map/Marker when form coordinates change programmatically
@@ -151,12 +169,16 @@ const AdminEditPage: React.FC = () => {
       const newPos = { lat: form.latitude, lng: form.longitude };
       
       // Avoid re-centering if the change came from the map itself (simple check to avoid jitter)
-      const currentMarkerPos = markerInstance.getPosition();
-      const dist = Math.abs(currentMarkerPos.lat() - newPos.lat) + Math.abs(currentMarkerPos.lng() - newPos.lng);
-      
-      if (dist > 0.0001) {
-        markerInstance.setPosition(newPos);
-        mapInstance.panTo(newPos);
+      try {
+        const currentMarkerPos = markerInstance.getPosition();
+        const dist = Math.abs(currentMarkerPos.lat() - newPos.lat) + Math.abs(currentMarkerPos.lng() - newPos.lng);
+        
+        if (dist > 0.0001) {
+          markerInstance.setPosition(newPos);
+          mapInstance.panTo(newPos);
+        }
+      } catch (e) {
+        // Ignore errors if map not ready
       }
     }
   }, [form.latitude, form.longitude, mapInstance, markerInstance]);
@@ -418,15 +440,18 @@ const AdminEditPage: React.FC = () => {
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         
-        {GOOGLE_MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE' && (
-           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r shadow-sm">
+        {mapError && (
+           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r shadow-sm animate-in fade-in">
              <div className="flex">
                <div className="flex-shrink-0">
-                 <AlertCircle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                 <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
                </div>
                <div className="ml-3">
-                 <p className="text-sm text-yellow-700">
-                   <strong className="font-bold">Google Maps Warning:</strong> กรุณาใส่ API KEY ในไฟล์ <code>pages/AdminEditPage.tsx</code> (บรรทัดที่ 12) เพื่อให้แผนที่ใช้งานได้สมบูรณ์
+                 <p className="text-sm text-red-700 font-bold">
+                   {mapError}
+                 </p>
+                 <p className="text-xs text-red-600 mt-1">
+                   วิธีแก้: ไปที่ Google Cloud Console {'>'} API Credentials {'>'} เลือก Key นี้ {'>'} เพิ่ม "https://py-asset.vercel.app/*" และ "http://localhost:*" ในช่อง Website Restrictions
                  </p>
                </div>
              </div>
@@ -626,7 +651,15 @@ const AdminEditPage: React.FC = () => {
 
                 {/* Map Container */}
                 <div className="rounded-xl overflow-hidden border border-slate-200 z-0 relative">
-                    <div ref={mapRef} className="w-full h-[500px] bg-slate-100" />
+                    {mapError ? (
+                       <div className="w-full h-[500px] bg-slate-100 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                         <MapPin size={48} className="mb-4 text-slate-300" />
+                         <p className="font-bold text-slate-500">แผนที่โหลดไม่ได้</p>
+                         <p className="text-xs mt-2 text-red-400">{mapError}</p>
+                       </div>
+                    ) : (
+                       <div ref={mapRef} className="w-full h-[500px] bg-slate-100" />
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
