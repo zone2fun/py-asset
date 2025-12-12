@@ -8,6 +8,7 @@ interface SEOProps {
   image?: string;
   url?: string;
   type?: string;
+  price?: number;
 }
 
 const SEO: React.FC<SEOProps> = ({ 
@@ -16,7 +17,8 @@ const SEO: React.FC<SEOProps> = ({
   keywords, 
   image, 
   url,
-  type = 'website'
+  type = 'website',
+  price
 }) => {
   const siteTitle = "Phayao Asset Hub - ศูนย์รวมบ้านและที่ดินพะเยา";
   const defaultDescription = "ค้นหาบ้าน ที่ดิน หอพัก และอสังหาริมทรัพย์ในจังหวัดพะเยา ราคาถูก ทำเลดี เจ้าของขายเอง";
@@ -29,6 +31,9 @@ const SEO: React.FC<SEOProps> = ({
   const metaKeywords = keywords || defaultKeywords;
   const metaImage = image || defaultImage;
   const metaUrl = url || window.location.href;
+  
+  // If price is provided, switch type to 'product' to help FB understand it's an item for sale
+  const metaType = price ? 'product' : type;
 
   // Schema.org Structured Data for Local Business / Real Estate
   const schemaData = {
@@ -44,7 +49,14 @@ const SEO: React.FC<SEOProps> = ({
       "addressCountry": "TH"
     },
     "url": siteUrl,
-    "priceRange": "฿฿"
+    ...(price && {
+      "offers": {
+        "@type": "Offer",
+        "price": price,
+        "priceCurrency": "THB",
+        "availability": "https://schema.org/InStock"
+      }
+    })
   };
 
   return (
@@ -55,18 +67,30 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="keywords" content={metaKeywords} />
 
       {/* Open Graph / Facebook */}
-      <meta property="og:type" content={type} />
+      <meta property="og:site_name" content="Phayao Asset Hub" />
+      <meta property="og:type" content={metaType} />
       <meta property="og:url" content={metaUrl} />
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
+      <meta property="og:image:alt" content={metaTitle} />
+      
+      {/* Product Specific Tags (For Facebook Marketplace/Rich Snippets) */}
+      {price && (
+        <>
+          <meta property="product:price:amount" content={price.toString()} />
+          <meta property="product:price:currency" content="THB" />
+          <meta property="og:price:amount" content={price.toString()} />
+          <meta property="og:price:currency" content="THB" />
+        </>
+      )}
 
       {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:url" content={metaUrl} />
-      <meta property="twitter:title" content={metaTitle} />
-      <meta property="twitter:description" content={metaDescription} />
-      <meta property="twitter:image" content={metaImage} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:url" content={metaUrl} />
+      <meta name="twitter:title" content={metaTitle} />
+      <meta name="twitter:description" content={metaDescription} />
+      <meta name="twitter:image" content={metaImage} />
 
       {/* JSON-LD Structured Data */}
       <script type="application/ld+json">

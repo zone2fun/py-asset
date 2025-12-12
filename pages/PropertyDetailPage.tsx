@@ -80,13 +80,7 @@ const PropertyDetailPage: React.FC = () => {
         text: `แนะนำทรัพย์: ${property?.title} ราคา ${property?.price.toLocaleString()}`,
         url: window.location.href,
       }).catch(() => {
-        // If cancelled or failed, just show modal as fallback? 
-        // Or do nothing. Usually do nothing if user cancelled.
-        // But if error is 'not supported' (rare here), show modal.
-        // Let's just fallback to modal only if logic dictates, 
-        // but simple toggle is safer for cross-device consistency if we want custom UI.
-        // For now, let's prefer Modal on Desktop (no navigator.share usually) 
-        // and Native on Mobile.
+        // Fallback to modal if native share fails or is cancelled
       });
     } else {
       setShowShareModal(true);
@@ -145,9 +139,10 @@ const PropertyDetailPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
       <SEO 
         title={`${property.title} - ${property.location}`}
-        description={`ประกาศขาย ${property.title} ราคา ${property.price.toLocaleString()} บาท ทำเล ${property.location} ขนาด ${property.size || '-'} รายละเอียด: ${property.description.substring(0, 100)}...`}
+        description={`ประกาศขาย ${property.title} ราคา ${property.price.toLocaleString()} บาท ทำเล ${property.location} ขนาด ${property.size || '-'} ${property.description.substring(0, 150)}...`}
         image={property.image}
-        keywords={`ขาย${property.type}พะเยา, ${property.location}, อสังหาพะเยา`}
+        price={property.price}
+        keywords={`ขาย${property.type}พะเยา, ${property.location}, อสังหาพะเยา, บ้านมือสองพะเยา`}
       />
 
       {/* Back Button (Floating on Mobile, Static on Desktop) */}
