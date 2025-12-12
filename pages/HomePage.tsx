@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Home, Trees, Building, Search, Megaphone, Coins, ArrowRight, Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Trees, Building, Search, Megaphone, Coins, ArrowRight, Loader2, Sparkles, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PropertyType, Property } from '../types';
 import { getProperties } from '../services/propertyService';
@@ -10,46 +10,47 @@ import SEO from '../components/SEO';
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [recommended, setRecommended] = useState<Property[]>([]);
+  const [videoReviews, setVideoReviews] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const recScrollRef = useRef<HTMLDivElement>(null);
+  const videoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchRecommended = async () => {
+    const fetchData = async () => {
       try {
         const data = await getProperties('All');
-        // Filter only recommended properties
-        let filtered = data.filter(p => p.isRecommended === true);
         
-        // If not enough recommended items, fill with latest items to make the slider look good (optional, but good UX)
-        // Or just show what we have. Let's just show what we have + View All.
-        if (filtered.length === 0) {
-            // Fallback: Show latest 6 if no recommended set
-            filtered = data.slice(0, 6);
-        }
+        // 1. Get Recommended (Top Priority)
+        let recData = data.filter(p => p.isRecommended === true);
+        if (recData.length === 0) recData = data.slice(0, 6);
+        setRecommended(recData);
 
-        setRecommended(filtered);
+        // 2. Get Video Reviews
+        const vidData = data.filter(p => p.contentType === 'video');
+        setVideoReviews(vidData);
+
       } catch (error) {
-        console.error("Failed to load recommended properties", error);
+        console.error("Failed to load properties", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecommended();
+    fetchData();
   }, []);
 
   const handleCategoryClick = (type: PropertyType) => {
     navigate(`/list?type=${type}`);
   };
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-        const { current } = scrollContainerRef;
-        const scrollAmount = 320; // Approx card width + gap
+  const scroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+    if (ref.current) {
+        const scrollAmount = 300;
         if (direction === 'left') {
-            current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            ref.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
         } else {
-            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     }
   };
@@ -130,12 +131,11 @@ const HomePage: React.FC = () => {
                    ทรัพย์น่าซื้อ <Sparkles size={20} className="ml-2 text-yellow-500 fill-yellow-500" />
                </h2>
                <div className="flex items-center gap-2">
-                   {/* Navigation Buttons (Desktop) */}
                    <div className="hidden md:flex gap-1 mr-2">
-                        <button onClick={() => scroll('left')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                        <button onClick={() => scroll(recScrollRef, 'left')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
                             <ChevronLeft size={20} />
                         </button>
-                        <button onClick={() => scroll('right')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                        <button onClick={() => scroll(recScrollRef, 'right')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
                             <ChevronRight size={20} />
                         </button>
                    </div>
@@ -152,22 +152,11 @@ const HomePage: React.FC = () => {
             ) : (
                 <div className="relative">
                     {/* Floating Navigation Buttons (Mobile/Desktop overlay) */}
-                    <button 
-                        onClick={() => scroll('left')} 
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"
-                    >
-                        <ChevronLeft size={24} />
-                    </button>
-                    
-                    <button 
-                        onClick={() => scroll('right')} 
-                        className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"
-                    >
-                        <ChevronRight size={24} />
-                    </button>
+                    <button onClick={() => scroll(recScrollRef, 'left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronLeft size={24} /></button>
+                    <button onClick={() => scroll(recScrollRef, 'right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronRight size={24} /></button>
 
                     <div 
-                        ref={scrollContainerRef}
+                        ref={recScrollRef}
                         className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 space-x-4 no-scrollbar snap-x snap-mandatory scroll-smooth"
                     >
                         {recommended.map(property => (
@@ -175,12 +164,8 @@ const HomePage: React.FC = () => {
                                 <PropertyCard property={property} />
                             </div>
                         ))}
-                        {/* View All Card */}
                         <div className="min-w-[150px] md:min-w-[180px] snap-center flex items-center justify-center">
-                            <button 
-                                onClick={() => navigate('/list')}
-                                className="w-full h-full min-h-[250px] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors group"
-                            >
+                            <button onClick={() => navigate('/list')} className="w-full h-full min-h-[250px] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors group">
                                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform">
                                     <ArrowRight size={24} />
                                 </div>
@@ -193,10 +178,47 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
+        {/* Video Reviews Slider (NEW SECTION) */}
+        {videoReviews.length > 0 && (
+          <div className="relative group">
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 flex items-center">
+                   วิดีโอรีวิว <Video size={24} className="ml-2 text-red-500 fill-red-500" />
+               </h2>
+               <div className="flex items-center gap-2">
+                   <div className="hidden md:flex gap-1 mr-2">
+                        <button onClick={() => scroll(videoScrollRef, 'left')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button onClick={() => scroll(videoScrollRef, 'right')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
+                   </div>
+               </div>
+            </div>
+            
+            <div className="relative">
+                <button onClick={() => scroll(videoScrollRef, 'left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronLeft size={24} /></button>
+                <button onClick={() => scroll(videoScrollRef, 'right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronRight size={24} /></button>
+
+                <div 
+                    ref={videoScrollRef}
+                    className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 space-x-4 no-scrollbar snap-x snap-mandatory scroll-smooth"
+                >
+                    {videoReviews.map(property => (
+                        <div key={property.id} className="min-w-[260px] md:min-w-[280px] snap-center">
+                            <PropertyCard property={property} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+          </div>
+        )}
+
         {/* Categories Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-slate-500 pl-3">
                 เลือกหมวดหมู่ทรัพย์
             </h2>
           </div>
@@ -276,17 +298,6 @@ const HomePage: React.FC = () => {
               </div>
             </button>
           </div>
-        </div>
-        
-        {/* SEO Text Block (Hidden from visual focus but visible to bots) */}
-        <div className="bg-slate-100 p-6 rounded-xl text-sm text-slate-600 leading-relaxed">
-            <h3 className="font-bold text-slate-800 mb-2">ทำไมต้องเลือกซื้อบ้านและที่ดินพะเยากับเรา?</h3>
-            <p>
-                Phayao Asset Hub เป็นเว็บไซต์สื่อกลางสำหรับการ <strong>ซื้อ-ขาย อสังหาริมทรัพย์ในจังหวัดพะเยา</strong> 
-                โดยเฉพาะ ไม่ว่าคุณจะกำลังมองหา <strong>บ้านเดี่ยวพะเยา ราคาถูก</strong>, <strong>ที่ดินเปล่าพะเยา</strong> สำหรับสร้างบ้านหรือทำการเกษตร, 
-                หรือ <strong>บ้านมือสองสภาพดี</strong> ในทำเลทองอย่าง อำเภอเมืองพะเยา, แม่ใจ, เชียงคำ, หรือหน้ามหาวิทยาลัยพะเยา 
-                เรามีรายการทรัพย์อัปเดตใหม่ทุกวัน พร้อมบริการรับฝากขายบ้านและที่ดินฟรี ช่วยให้คุณเข้าถึงกลุ่มลูกค้าเป้าหมายได้อย่างรวดเร็ว
-            </p>
         </div>
       </div>
     </div>
