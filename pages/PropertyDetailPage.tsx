@@ -144,7 +144,7 @@ const PropertyDetailPage: React.FC = () => {
   // ==========================================
   if (isVideoReview) {
       return (
-        <div className="bg-black min-h-screen pb-28 md:pb-0">
+        <div className="bg-black min-h-screen pb-32 md:pb-0">
           <SEO 
             title={`VIDEO: ${property.title}`} 
             description={property.description} 
@@ -231,17 +231,17 @@ const PropertyDetailPage: React.FC = () => {
               </p>
 
               {/* Fixed Bottom Action for Video Page */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 md:relative md:border-none md:p-0 z-[60] md:z-auto">
+              <div className="fixed bottom-[80px] left-4 right-4 md:static md:bottom-auto md:left-auto md:right-auto md:p-0 z-50">
                    <button 
                         onClick={handleContact}
                         disabled={isSold}
-                        className={`w-full font-bold py-4 px-6 rounded-xl shadow-lg flex items-center justify-center text-lg transition-all active:scale-95 ${
+                        className={`w-full font-bold py-3.5 px-6 rounded-xl shadow-lg flex items-center justify-center text-lg transition-all active:scale-95 ${
                             isSold 
                             ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                             : 'bg-[#06C755] hover:bg-[#05b64d] text-white'
                         }`}
                     >
-                        <MessageCircle size={24} className="mr-2" />
+                        <MessageCircle size={24} className="mr-2 md:w-5 md:h-5" />
                         {isSold ? 'ปิดการขายแล้ว' : 'ทักไลน์สอบถาม / นัดดู'}
                     </button>
               </div>
