@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2, Facebook, Link as LinkIcon, Check, X } from 'lucide-react';
 import { getPropertyInquiryUrl } from '../services/lineService';
 import { getPropertyById } from '../services/propertyService';
 import { Property } from '../types';
@@ -11,6 +11,10 @@ const PropertyDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  
+  // Share Modal State
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   // Image Slider State
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -69,11 +73,47 @@ const PropertyDetailPage: React.FC = () => {
   };
 
   const handleShare = () => {
+    // Try Native Share first (Mobile)
+    if (navigator.share) {
+      navigator.share({
+        title: property?.title,
+        text: `แนะนำทรัพย์: ${property?.title} ราคา ${property?.price.toLocaleString()}`,
+        url: window.location.href,
+      }).catch(() => {
+        // If cancelled or failed, just show modal as fallback? 
+        // Or do nothing. Usually do nothing if user cancelled.
+        // But if error is 'not supported' (rare here), show modal.
+        // Let's just fallback to modal only if logic dictates, 
+        // but simple toggle is safer for cross-device consistency if we want custom UI.
+        // For now, let's prefer Modal on Desktop (no navigator.share usually) 
+        // and Native on Mobile.
+      });
+    } else {
+      setShowShareModal(true);
+    }
+  };
+
+  const handleShareFacebook = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    setShowShareModal(false);
+  };
+
+  const handleShareLine = () => {
     if (!property) return;
     const shareText = `แนะนำทรัพย์นี้ครับ: ${property.title}\nราคา: ฿${property.price.toLocaleString()}\nทำเล: ${property.location}`;
     const shareUrl = window.location.href;
     const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + shareUrl)}`;
     window.open(lineUrl, '_blank');
+    setShowShareModal(false);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => {
+        setCopied(false);
+        setShowShareModal(false);
+    }, 1500);
   };
 
   const handleContact = () => {
@@ -284,6 +324,47 @@ const PropertyDetailPage: React.FC = () => {
                  </div>
             </div>
         </div>
+
+        {/* Share Modal */}
+        {showShareModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+                    <button 
+                        onClick={() => setShowShareModal(false)}
+                        className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+                    >
+                        <X size={24} />
+                    </button>
+                    <h3 className="text-xl font-bold text-slate-800 mb-6 text-center">แชร์ทรัพย์นี้</h3>
+                    
+                    <div className="grid grid-cols-3 gap-4">
+                        <button onClick={handleShareFacebook} className="flex flex-col items-center gap-2 group">
+                            <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Facebook size={28} />
+                            </div>
+                            <span className="text-xs font-medium text-slate-600">Facebook</span>
+                        </button>
+
+                        <button onClick={handleShareLine} className="flex flex-col items-center gap-2 group">
+                            <div className="w-14 h-14 bg-green-100 text-[#06C755] rounded-full flex items-center justify-center group-hover:bg-[#06C755] group-hover:text-white transition-colors">
+                                <MessageCircle size={28} />
+                            </div>
+                            <span className="text-xs font-medium text-slate-600">LINE</span>
+                        </button>
+
+                        <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 group">
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${copied ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600 group-hover:bg-slate-800 group-hover:text-white'}`}>
+                                {copied ? <Check size={28} /> : <LinkIcon size={28} />}
+                            </div>
+                            <span className={`text-xs font-medium ${copied ? 'text-emerald-600' : 'text-slate-600'}`}>
+                                {copied ? 'คัดลอกแล้ว' : 'คัดลอกลิงก์'}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
       </div>
     </div>
   );
