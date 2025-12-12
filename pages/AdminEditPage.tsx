@@ -1,69 +1,30 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown, MapPin, Sparkles, Layout } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import { GoogleGenAI } from "@google/genai";
 
-// Fix for default marker icon in Leaflet with React
-const icon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+// ==================================================================================
+// 🔑 Google Maps Configuration
+// กรุณาใส่ API KEY ของคุณที่นี่ เพื่อให้แผนที่แสดงผลได้ถูกต้อง
+// ==================================================================================
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE'; 
+// ==================================================================================
 
-// Component to handle map clicks, drags, and update coordinates
-const LocationMarker = ({ position, onLocationSelect }: { position: { lat: number; lng: number } | null, onLocationSelect: (lat: number, lng: number) => void }) => {
-  const map = useMapEvents({
-    click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
+// Extend Window interface for Google Maps
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
 
-  const markerRef = useRef<L.Marker>(null);
-
-  const eventHandlers = useMemo(
-    () => ({
-      dragend() {
-        const marker = markerRef.current;
-        if (marker) {
-          const { lat, lng } = marker.getLatLng();
-          onLocationSelect(lat, lng);
-        }
-      },
-    }),
-    [onLocationSelect],
-  );
-
-  useEffect(() => {
-    if (position) {
-      map.flyTo(position, map.getZoom());
-    }
-  }, [position, map]);
-
-  return position === null ? null : (
-    <Marker 
-      draggable={true}
-      eventHandlers={eventHandlers}
-      position={position} 
-      icon={icon} 
-      ref={markerRef}
-    />
-  );
-};
-
-// Interface for Image Management
 interface ImageItem {
-  id: string;     // Unique ID for React Key
-  url: string;    // Display URL (Blob or Remote)
-  file?: File;    // File object if it's a new upload
-  isNew: boolean; // Flag to identify new uploads
+  id: string;
+  url: string;
+  file?: File;
+  isNew: boolean;
 }
 
 const PHAYAO_DISTRICTS = [
@@ -82,22 +43,18 @@ const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
-  // AI State
   const [generatingAI, setGeneratingAI] = useState(false);
-  
-  // Unified Image State
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
-  
   const [gettingLoc, setGettingLoc] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
-
-  // Selected District
   const [selectedDistrict, setSelectedDistrict] = useState<string>('เมืองพะเยา');
+  const [mapInstance, setMapInstance] = useState<any>(null);
+  const [markerInstance, setMarkerInstance] = useState<any>(null);
 
   const PHAYAO_CENTER = { lat: 19.166, lng: 99.902 };
 
@@ -117,6 +74,94 @@ const AdminEditPage: React.FC = () => {
 
   const isEditMode = !!id;
 
+  // 1. Initialize Google Maps Script
+  useEffect(() => {
+    const loadGoogleMaps = () => {
+      if (window.google) {
+        initMap();
+        return;
+      }
+
+      const scriptId = 'google-maps-script';
+      if (document.getElementById(scriptId)) return;
+
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => initMap();
+      document.head.appendChild(script);
+    };
+
+    loadGoogleMaps();
+  }, []);
+
+  // 2. Initialize Map Instance
+  const initMap = () => {
+    if (!mapRef.current || !window.google) return;
+
+    const initialPos = (form.latitude && form.longitude) 
+      ? { lat: form.latitude, lng: form.longitude }
+      : PHAYAO_CENTER;
+
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: initialPos,
+      zoom: 13,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    const marker = new window.google.maps.Marker({
+      position: initialPos,
+      map: map,
+      draggable: true,
+      animation: window.google.maps.Animation.DROP,
+    });
+
+    // Add drag listener
+    marker.addListener('dragend', () => {
+      const pos = marker.getPosition();
+      setForm(prev => ({
+        ...prev,
+        latitude: pos.lat(),
+        longitude: pos.lng()
+      }));
+    });
+
+    // Add click listener
+    map.addListener('click', (e: any) => {
+      const pos = e.latLng;
+      marker.setPosition(pos);
+      setForm(prev => ({
+        ...prev,
+        latitude: pos.lat(),
+        longitude: pos.lng()
+      }));
+    });
+
+    setMapInstance(map);
+    setMarkerInstance(marker);
+  };
+
+  // 3. Update Map/Marker when form coordinates change programmatically
+  useEffect(() => {
+    if (mapInstance && markerInstance && form.latitude && form.longitude) {
+      const newPos = { lat: form.latitude, lng: form.longitude };
+      
+      // Avoid re-centering if the change came from the map itself (simple check to avoid jitter)
+      const currentMarkerPos = markerInstance.getPosition();
+      const dist = Math.abs(currentMarkerPos.lat() - newPos.lat) + Math.abs(currentMarkerPos.lng() - newPos.lng);
+      
+      if (dist > 0.0001) {
+        markerInstance.setPosition(newPos);
+        mapInstance.panTo(newPos);
+      }
+    }
+  }, [form.latitude, form.longitude, mapInstance, markerInstance]);
+
+  // Load existing property data
   useEffect(() => {
     if (isEditMode && id) {
       loadProperty(id);
@@ -141,7 +186,6 @@ const AdminEditPage: React.FC = () => {
         status: prop.status || 'active'
       });
       
-      // Load existing images into state
       const existingImages = prop.images && prop.images.length > 0 ? prop.images : [prop.image];
       const items: ImageItem[] = existingImages.map((url, index) => ({
         id: `existing-${index}-${Date.now()}`,
@@ -150,15 +194,12 @@ const AdminEditPage: React.FC = () => {
       }));
       setImageItems(items);
 
-      // Extract District from Location string (e.g. "เมืองพะเยา, พะเยา")
       if (prop.location) {
         const parts = prop.location.split(',');
         const district = parts[0].trim();
-        // Check if extracted district is in our list
         if (PHAYAO_DISTRICTS.includes(district)) {
           setSelectedDistrict(district);
         } else if (PHAYAO_DISTRICTS.some(d => district.includes(d))) {
-          // Fuzzy match
           const match = PHAYAO_DISTRICTS.find(d => district.includes(d));
           if (match) setSelectedDistrict(match);
         }
@@ -183,7 +224,6 @@ const AdminEditPage: React.FC = () => {
       }));
       setImageItems(prev => [...prev, ...newItems]);
     }
-    // Reset input to allow selecting same file again if needed
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -192,7 +232,7 @@ const AdminEditPage: React.FC = () => {
   };
 
   const handleSetCover = (index: number) => {
-    if (index === 0) return; // Already cover
+    if (index === 0) return;
     const newItems = [...imageItems];
     const [item] = newItems.splice(index, 1);
     newItems.unshift(item);
@@ -222,30 +262,34 @@ const AdminEditPage: React.FC = () => {
     }
   };
 
-  const handleSearchLocation = async () => {
+  const handleSearchLocation = () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
-    try {
-      let finalQuery = searchQuery;
-      if (!finalQuery.toLowerCase().includes('phayao') && !finalQuery.includes('พะเยา')) {
-        finalQuery += ' Phayao Thailand';
+    
+    if (window.google && window.google.maps) {
+      const geocoder = new window.google.maps.Geocoder();
+      let query = searchQuery;
+      // Append context if not present
+      if (!query.includes('พะเยา') && !query.toLowerCase().includes('phayao')) {
+        query += ' จ.พะเยา';
       }
 
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(finalQuery)}&limit=1`);
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        alert(`พบตำแหน่ง: ${data[0].display_name}`);
-        setForm(prev => ({ ...prev, latitude: lat, longitude: lon }));
-      } else {
-        alert("ไม่พบสถานที่นี้ ลองระบุชื่อสถานที่ + ตำบล/อำเภอ ให้ชัดเจนขึ้น");
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      alert("เกิดข้อผิดพลาดในการค้นหา");
-    } finally {
+      geocoder.geocode({ address: query }, (results: any, status: any) => {
+        setSearching(false);
+        if (status === 'OK' && results[0]) {
+          const loc = results[0].geometry.location;
+          setForm(prev => ({ ...prev, latitude: loc.lat(), longitude: loc.lng() }));
+          if (mapInstance) {
+            mapInstance.setCenter(loc);
+            mapInstance.setZoom(15);
+          }
+        } else {
+          alert('ไม่พบสถานที่นี้ ลองระบุชื่อให้ชัดเจนขึ้น');
+        }
+      });
+    } else {
+      // Fallback if Google Maps didn't load (e.g. invalid key)
+      alert("Google Maps API ยังไม่พร้อมใช้งาน");
       setSearching(false);
     }
   };
@@ -261,24 +305,10 @@ const AdminEditPage: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
         คุณคือนักเขียนโฆษณาขายอสังหาริมทรัพย์มืออาชีพในไทย
-        ช่วยแต่งคำบรรยาย (Description) สำหรับประกาศขายอสังหาริมทรัพย์ให้น่าสนใจ ดึงดูดลูกค้า และอ่านง่าย (ใช้ Emoji ประกอบให้สวยงาม)
-        
-        ข้อมูลทรัพย์:
-        - หัวข้อ: ${form.title}
-        - ประเภท: ${form.type}
-        - ราคา: ${form.price} บาท
-        - ขนาด: ${form.size || 'ไม่ระบุ'}
-        - ทำเล: ${selectedDistrict}, จังหวัดพะเยา
-        - ข้อมูลเพิ่มเติมที่ผู้ขายร่างไว้ (ถ้ามี): ${form.description}
-        
-        โครงสร้างที่ต้องการ:
-        1. พาดหัวให้น่าตื่นเต้น (Catchy Headline)
-        2. รายละเอียดจุดเด่น (Highlights) เป็นข้อย่อย
-        3. สถานที่ใกล้เคียง (ถ้าทราบจากทำเล หรือแต่งให้น่าสนใจว่าใกล้แหล่งชุมชน)
-        4. ประโยคปิดท้ายกระตุ้นให้รีบติดต่อ (Call to Action)
-        
-        โทนภาษา: เป็นกันเอง, มืออาชีพ, น่าเชื่อถือ
-        ภาษา: ไทย
+        ช่วยแต่งคำบรรยาย (Description) สำหรับประกาศขายอสังหาริมทรัพย์ให้น่าสนใจ
+        ข้อมูล: ${form.title}, ประเภท: ${form.type}, ราคา: ${form.price}, ทำเล: ${selectedDistrict} พะเยา
+        รายละเอียด: ${form.description}
+        ขอแบบมี Emoji และแบ่งเป็นข้อย่อยอ่านง่าย
       `;
 
       const response = await ai.models.generateContent({
@@ -291,7 +321,7 @@ const AdminEditPage: React.FC = () => {
       }
     } catch (error) {
       console.error("AI Error:", error);
-      alert("เกิดข้อผิดพลาดในการเรียกใช้ AI: " + (error as Error).message);
+      alert("AI Error: " + (error as Error).message);
     } finally {
       setGeneratingAI(false);
     }
@@ -314,16 +344,13 @@ const AdminEditPage: React.FC = () => {
     
     setSubmitting(true);
     try {
-      // 1. Separate new files to upload
       const filesToUpload = imageItems.filter(item => item.isNew && item.file).map(item => item.file!);
       
-      // 2. Upload new files
       let uploadedUrls: string[] = [];
       if (filesToUpload.length > 0) {
         uploadedUrls = await uploadImages(filesToUpload);
       }
 
-      // 3. Reconstruct final image list preserving the visual order
       let uploadPointer = 0;
       const finalImages = imageItems.map(item => {
         if (item.isNew) {
@@ -332,12 +359,10 @@ const AdminEditPage: React.FC = () => {
         return item.url;
       });
 
-      // Prepare coordinates
       const coordinates = (form.latitude !== null && form.longitude !== null && !isNaN(form.latitude) && !isNaN(form.longitude))
         ? { lat: form.latitude, lng: form.longitude } 
         : null;
       
-      // Format Location
       const finalLocation = `${selectedDistrict}, พะเยา`;
 
       const propertyData = {
@@ -346,7 +371,7 @@ const AdminEditPage: React.FC = () => {
         type: form.type,
         size: form.size,
         description: form.description,
-        image: finalImages[0] || '', // First image is cover
+        image: finalImages[0] || '', 
         images: finalImages,
         coordinates: coordinates,
         status: form.status,
@@ -357,18 +382,13 @@ const AdminEditPage: React.FC = () => {
         await updateProperty(id, propertyData);
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
-        // Pass the updated form with location included
         const formWithLocation = { ...form, location: finalLocation };
         await addProperty(formWithLocation, finalImages); 
       }
       navigate('/admin');
     } catch (error: any) {
       console.error(error);
-      if (error.message === "CORS_ERROR") {
-        alert("อัปโหลดรูปไม่ผ่าน (CORS Error)! กรุณาตรวจสอบการตั้งค่า");
-      } else {
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-      }
+      alert('เกิดข้อผิดพลาด: ' + error.message);
     } finally {
       setSubmitting(false);
     }
@@ -397,6 +417,22 @@ const AdminEditPage: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 md:p-8">
+        
+        {GOOGLE_MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE' && (
+           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r shadow-sm">
+             <div className="flex">
+               <div className="flex-shrink-0">
+                 <AlertCircle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+               </div>
+               <div className="ml-3">
+                 <p className="text-sm text-yellow-700">
+                   <strong className="font-bold">Google Maps Warning:</strong> กรุณาใส่ API KEY ในไฟล์ <code>pages/AdminEditPage.tsx</code> (บรรทัดที่ 12) เพื่อให้แผนที่ใช้งานได้สมบูรณ์
+                 </p>
+               </div>
+             </div>
+           </div>
+        )}
+
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
           {/* Left Column: Images & Status */}
@@ -432,15 +468,11 @@ const AdminEditPage: React.FC = () => {
                     {imageItems.map((item, idx) => (
                     <div key={item.id} className={`relative aspect-square rounded-lg overflow-hidden border group transition-all ${idx === 0 ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'}`}>
                         <img src={item.url} className="w-full h-full object-cover" alt="preview" />
-                        
-                        {/* Cover Badge */}
                         {idx === 0 && (
                         <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br font-bold z-10">
                             ปก
                         </div>
                         )}
-
-                        {/* Hover Actions */}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
                             {idx !== 0 && (
                             <button 
@@ -461,8 +493,6 @@ const AdminEditPage: React.FC = () => {
                         </div>
                     </div>
                     ))}
-
-                    {/* Add Button */}
                     <div 
                         onClick={() => fileInputRef.current?.click()}
                         className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-colors"
@@ -557,17 +587,19 @@ const AdminEditPage: React.FC = () => {
                  />
             </div>
 
-            {/* Map */}
+            {/* Google Map */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                    <Navigation size={16} className="mr-2 text-emerald-600"/> พิกัดแผนที่
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                        <Navigation size={16} className="mr-2 text-emerald-600"/> พิกัดแผนที่ (Google Maps)
+                    </h2>
+                </div>
 
                 <div className="flex flex-col md:flex-row gap-2">
                     <div className="relative flex-grow">
                         <input 
                             type="text" 
-                            placeholder="ค้นหาสถานที่..." 
+                            placeholder="ค้นหาสถานที่ (เช่น หน้ามอพะเยา)..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchLocation())}
@@ -592,22 +624,9 @@ const AdminEditPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="h-64 rounded-xl overflow-hidden border border-slate-200 z-0 relative">
-                    <MapContainer 
-                        center={form.latitude && form.longitude ? [form.latitude, form.longitude] : [PHAYAO_CENTER.lat, PHAYAO_CENTER.lng]} 
-                        zoom={13} 
-                        scrollWheelZoom={false} 
-                        style={{ height: '100%', width: '100%' }}
-                    >
-                        <TileLayer
-                            attribution='&copy; OpenStreetMap'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        <LocationMarker 
-                            position={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : null}
-                            onLocationSelect={(lat, lng) => setForm(prev => ({ ...prev, latitude: lat, longitude: lng }))}
-                        />
-                    </MapContainer>
+                {/* Map Container */}
+                <div className="rounded-xl overflow-hidden border border-slate-200 z-0 relative">
+                    <div ref={mapRef} className="w-full h-[500px] bg-slate-100" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
