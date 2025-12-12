@@ -29,7 +29,7 @@ const SEO: React.FC<SEOProps> = ({
   const defaultDescription = "ค้นหาบ้าน ที่ดิน หอพัก และอสังหาริมทรัพย์ในจังหวัดพะเยา ราคาถูก ทำเลดี เจ้าของขายเอง";
   const defaultKeywords = "ขายบ้านพะเยา, ที่ดินพะเยา, บ้านมือสอง, หอพักพะเยา, อสังหาพะเยา";
   const siteUrl = window.location.origin;
-  const defaultImage = "https://cdn-icons-png.flaticon.com/512/619/619153.png";
+  const defaultImage = "https://cdn-icons-png.flaticon.com/512/3655/3655589.png";
 
   // Priority: 1. URL Params (Fastest for bots) -> 2. Props (Real data) -> 3. Defaults
   const metaTitle = searchParams.get('og_title') || (title ? `${title} | Phayao Asset Hub` : siteTitle);
