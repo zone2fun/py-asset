@@ -34,7 +34,12 @@ const PropertyDetailPage: React.FC = () => {
     fetchProperty();
   }, [id]);
 
-  const allImages = property ? [property.image, ...(property.images || [])] : [];
+  // FIX: Use images array directly if available to prevent cover image duplication
+  // Check if images array exists and has content, otherwise fallback to single image
+  const allImages = property 
+    ? (property.images && property.images.length > 0 ? property.images : (property.image ? [property.image] : [])) 
+    : [];
+    
   const isSold = property?.status === 'sold';
   const isVideoReview = property?.contentType === 'video';
 
