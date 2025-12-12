@@ -1,6 +1,6 @@
 import { db } from "../firebaseConfig";
 import firebase from "firebase/compat/app";
-import { Property, PropertyType, SubmissionForm } from "../types";
+import { Property, PropertyType, SubmissionForm, Lead, LeadStatus } from "../types";
 
 const COLLECTION_NAME = "properties";
 const SUBMISSION_COLLECTION = "submissions";
@@ -59,6 +59,45 @@ export const getPropertyById = async (id: string): Promise<Property | undefined>
     console.warn("Error fetching property by ID:", error);
     return undefined;
   }
+};
+
+// --- LEADS MANAGEMENT (New) ---
+
+export const getLeads = async (): Promise<Lead[]> => {
+  if (!db) return [];
+  try {
+    const querySnapshot = await db.collection(SUBMISSION_COLLECTION)
+      .orderBy('createdAt', 'desc')
+      .get();
+      
+    const leads: Lead[] = [];
+    querySnapshot.forEach((doc) => {
+      leads.push({ id: doc.id, ...doc.data() } as Lead);
+    });
+    return leads;
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    return [];
+  }
+};
+
+export const getLeadById = async (id: string): Promise<Lead | undefined> => {
+  if (!db) return undefined;
+  try {
+    const doc = await db.collection(SUBMISSION_COLLECTION).doc(id).get();
+    if (doc.exists) {
+      return { id: doc.id, ...doc.data() } as Lead;
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Error fetching lead:", error);
+    return undefined;
+  }
+};
+
+export const updateLeadStatus = async (id: string, status: LeadStatus) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await db.collection(SUBMISSION_COLLECTION).doc(id).update({ status });
 };
 
 // --- ADMIN ACTIONS ---
@@ -141,7 +180,7 @@ export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) 
     ...form,
     images: imageUrls,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: 'pending'
+    status: 'pending' // Default status
   });
   
   return docRef.id;

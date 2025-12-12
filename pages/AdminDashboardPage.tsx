@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, LogOut, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, LogOut, Loader2, Users, LayoutDashboard } from 'lucide-react';
 import { logout } from '../services/authService';
 import { getProperties, deleteProperty } from '../services/propertyService';
 import { Property } from '../types';
@@ -42,23 +42,36 @@ const AdminDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
       <div className="bg-slate-800 text-white px-6 py-4 sticky top-0 z-40 flex justify-between items-center shadow-md">
-        <h1 className="font-bold text-lg">จัดการทรัพย์สิน</h1>
+        <h1 className="font-bold text-lg flex items-center">
+            <LayoutDashboard size={20} className="mr-2"/> จัดการทรัพย์สิน
+        </h1>
         <button onClick={handleLogout} className="text-slate-300 hover:text-white">
           <LogOut size={20} />
         </button>
       </div>
 
       <div className="p-4 md:p-8 max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-            <h2 className="text-slate-700 font-bold text-xl">รายการทั้งหมด ({properties.length})</h2>
+        
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <button
                 onClick={() => navigate('/admin/add')}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-6 rounded-lg shadow-sm flex items-center font-bold transition-colors"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white py-4 px-6 rounded-xl shadow-sm flex items-center justify-center font-bold transition-colors text-lg"
             >
-                <Plus size={20} className="mr-2" />
-                เพิ่มทรัพย์ใหม่
+                <Plus size={24} className="mr-3" />
+                เพิ่มทรัพย์ใหม่ (Listing)
+            </button>
+
+            <button
+                onClick={() => navigate('/admin/leads')}
+                className="bg-white border-2 border-slate-200 hover:border-emerald-500 hover:text-emerald-600 text-slate-700 py-4 px-6 rounded-xl shadow-sm flex items-center justify-center font-bold transition-all text-lg"
+            >
+                <Users size={24} className="mr-3" />
+                รายการที่ลูกค้าเสนอ (Leads)
             </button>
         </div>
+
+        <h2 className="text-slate-700 font-bold text-xl mb-4">ประกาศขายบนหน้าเว็บ ({properties.length})</h2>
 
         {loading ? (
           <div className="flex justify-center py-20">

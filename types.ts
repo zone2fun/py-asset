@@ -39,3 +39,23 @@ export interface SubmissionForm {
   status: string; // Added status field
   location?: string; // Added specific location string (e.g. District)
 }
+
+// New Types for Leads Management
+export type LeadStatus = 'pending' | 'contacted' | 'contract_signed';
+
+export interface Lead {
+  id: string;
+  title: string;
+  price: string;
+  type: PropertyType;
+  size: string;
+  description: string;
+  name: string;
+  phone: string;
+  location?: string;
+  latitude: number | null;
+  longitude: number | null;
+  images: string[]; // Stored as URLs
+  status: LeadStatus;
+  createdAt: any;
+}

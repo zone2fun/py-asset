@@ -9,6 +9,8 @@ import MortgagePage from './pages/MortgagePage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminEditPage from './pages/AdminEditPage';
+import AdminLeadsPage from './pages/AdminLeadsPage';
+import AdminLeadDetailPage from './pages/AdminLeadDetailPage';
 import SetupPage from './pages/SetupPage';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -54,6 +56,22 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <AdminEditPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/leads" 
+              element={
+                <ProtectedRoute>
+                  <AdminLeadsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/leads/:id" 
+              element={
+                <ProtectedRoute>
+                  <AdminLeadDetailPage />
                 </ProtectedRoute>
               } 
             />
