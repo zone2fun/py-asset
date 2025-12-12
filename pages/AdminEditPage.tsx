@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle, Star } from 'lucide-react';
-import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
-import { PropertyType, SubmissionForm } from '../types';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle, Star, Video, Image as ImageIcon, PlayCircle, Film } from 'lucide-react';
+import { getPropertyById, updateProperty, addProperty, uploadImages, uploadVideo } from '../services/propertyService';
+import { PropertyType, SubmissionForm, ContentType } from '../types';
 import { GoogleGenAI } from "@google/genai";
 
 // ==================================================================================
@@ -43,12 +43,18 @@ const AdminEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
+  
+  // Video State
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  
   const [gettingLoc, setGettingLoc] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
@@ -71,7 +77,9 @@ const AdminEditPage: React.FC = () => {
     longitude: null,
     images: [],
     status: 'active',
-    isRecommended: false
+    isRecommended: false,
+    contentType: 'post', // Default
+    video: null
   });
 
   const isEditMode = !!id;
@@ -207,9 +215,12 @@ const AdminEditPage: React.FC = () => {
         longitude: prop.coordinates?.lng || null,
         images: [],
         status: prop.status || 'active',
-        isRecommended: prop.isRecommended || false
+        isRecommended: prop.isRecommended || false,
+        contentType: prop.contentType || 'post',
+        video: null
       });
       
+      // Load Images
       const existingImages = prop.images && prop.images.length > 0 ? prop.images : [prop.image];
       const items: ImageItem[] = existingImages.map((url, index) => ({
         id: `existing-${index}-${Date.now()}`,
@@ -217,6 +228,11 @@ const AdminEditPage: React.FC = () => {
         isNew: false
       }));
       setImageItems(items);
+
+      // Load Video if exists
+      if (prop.videoUrl) {
+          setVideoPreviewUrl(prop.videoUrl);
+      }
 
       if (prop.location) {
         const parts = prop.location.split(',');
@@ -237,9 +253,22 @@ const AdminEditPage: React.FC = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleContentTypeChange = (type: ContentType) => {
+    setForm(prev => ({ ...prev, contentType: type }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files) as File[];
+      
+      // If Video mode, restrict to only 1 image (Cover)
+      if (form.contentType === 'video') {
+          if (imageItems.length >= 1) {
+              alert("วิดีโอรีวิว ใส่รูปปกได้เพียง 1 รูปครับ (สามารถลบรูปเดิมก่อนเพิ่มใหม่)");
+              return;
+          }
+      }
+
       const newItems: ImageItem[] = files.map(file => ({
         id: `new-${Math.random().toString(36).substr(2, 9)}`,
         url: URL.createObjectURL(file),
@@ -251,8 +280,27 @@ const AdminEditPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          // Simple validation
+          if (file.size > 100 * 1024 * 1024) { // 100MB
+              alert("ไฟล์วิดีโอใหญ่เกินไป (จำกัด 100MB)");
+              return;
+          }
+          setVideoFile(file);
+          setVideoPreviewUrl(URL.createObjectURL(file));
+      }
+      if (videoInputRef.current) videoInputRef.current.value = '';
+  };
+
   const handleRemoveImage = (index: number) => {
     setImageItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveVideo = () => {
+      setVideoFile(null);
+      setVideoPreviewUrl(null);
   };
 
   const handleSetCover = (index: number) => {
@@ -373,13 +421,28 @@ const AdminEditPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imageItems.length === 0) {
-      alert("กรุณาเพิ่มรูปภาพอย่างน้อย 1 รูป");
+      alert("กรุณาเพิ่มรูปภาพอย่างน้อย 1 รูป (สำหรับรูปปก)");
       return;
     }
+
+    // Validation for Video Review
+    if (form.contentType === 'video') {
+        if (!videoFile && !videoPreviewUrl) {
+            alert("กรุณาอัปโหลดวิดีโอ");
+            return;
+        }
+        if (imageItems.length > 1) {
+             // In case they switched modes with multiple images loaded
+             alert("โหมดวิดีโอรีวิว อนุญาตให้มีรูปปกเพียง 1 รูป กรุณาลบรูปส่วนเกินออก");
+             return;
+        }
+    }
+
     if (!confirm(isEditMode ? 'บันทึกการแก้ไข?' : 'เพิ่มทรัพย์ใหม่?')) return;
     
     setSubmitting(true);
     try {
+      // 1. Upload Images
       const filesToUpload = imageItems.filter(item => item.isNew && item.file).map(item => item.file!);
       
       let uploadedUrls: string[] = [];
@@ -394,6 +457,12 @@ const AdminEditPage: React.FC = () => {
         }
         return item.url;
       });
+
+      // 2. Upload Video (if new file exists)
+      let finalVideoUrl = videoPreviewUrl || '';
+      if (videoFile) {
+          finalVideoUrl = await uploadVideo(videoFile);
+      }
 
       const coordinates = (form.latitude !== null && form.longitude !== null && !isNaN(form.latitude) && !isNaN(form.longitude))
         ? { lat: form.latitude, lng: form.longitude } 
@@ -412,7 +481,9 @@ const AdminEditPage: React.FC = () => {
         coordinates: coordinates,
         status: form.status,
         location: finalLocation,
-        isRecommended: form.isRecommended
+        isRecommended: form.isRecommended,
+        contentType: form.contentType,
+        videoUrl: finalVideoUrl
       };
 
       if (isEditMode && id) {
@@ -420,7 +491,7 @@ const AdminEditPage: React.FC = () => {
         alert('แก้ไขข้อมูลสำเร็จ');
       } else {
         const formWithLocation = { ...form, location: finalLocation };
-        await addProperty(formWithLocation, finalImages); 
+        await addProperty(formWithLocation, finalImages, finalVideoUrl); 
       }
       navigate('/admin');
     } catch (error: any) {
@@ -475,9 +546,27 @@ const AdminEditPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
-          {/* Left Column: Images & Status */}
+          {/* Left Column: Media & Status */}
           <div className="lg:col-span-4 space-y-6">
              
+             {/* Content Type Selector */}
+             <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex">
+                 <button
+                    type="button"
+                    onClick={() => handleContentTypeChange('post')}
+                    className={`flex-1 flex items-center justify-center py-2.5 text-sm font-bold rounded-lg transition-all ${form.contentType === 'post' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                 >
+                     <ImageIcon size={16} className="mr-2" /> โพสต์ทั่วไป
+                 </button>
+                 <button
+                    type="button"
+                    onClick={() => handleContentTypeChange('video')}
+                    className={`flex-1 flex items-center justify-center py-2.5 text-sm font-bold rounded-lg transition-all ${form.contentType === 'video' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                 >
+                     <Video size={16} className="mr-2" /> วิดีโอรีวิว
+                 </button>
+             </div>
+
              {/* Status Card */}
              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                 {/* Sale Status */}
@@ -522,13 +611,18 @@ const AdminEditPage: React.FC = () => {
                 </div>
              </div>
 
-             {/* Images Card */}
+             {/* MEDIA UPLOADER */}
              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
-                  <label className="block text-sm font-bold text-slate-800">รูปภาพ ({imageItems.length})</label>
-                  <span className="text-xs text-slate-400">รูปแรก = ปก</span>
+                  <label className="block text-sm font-bold text-slate-800">
+                      {form.contentType === 'video' ? 'รูปปก (1 รูป)' : `รูปภาพ (${imageItems.length})`}
+                  </label>
+                  {form.contentType === 'post' && (
+                      <span className="text-xs text-slate-400">รูปแรก = ปก</span>
+                  )}
                 </div>
                 
+                {/* Images Grid */}
                 <div className="grid grid-cols-3 gap-2">
                     {imageItems.map((item, idx) => (
                     <div key={item.id} className={`relative aspect-square rounded-lg overflow-hidden border group transition-all ${idx === 0 ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'}`}>
@@ -539,7 +633,7 @@ const AdminEditPage: React.FC = () => {
                         </div>
                         )}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                            {idx !== 0 && (
+                            {idx !== 0 && form.contentType === 'post' && (
                             <button 
                                 type="button"
                                 onClick={() => handleSetCover(idx)}
@@ -558,15 +652,49 @@ const AdminEditPage: React.FC = () => {
                         </div>
                     </div>
                     ))}
-                    <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-colors"
-                    >
-                        <Camera size={20} className="mb-1" />
-                        <span className="text-[10px] font-medium">เพิ่มรูป</span>
-                    </div>
-                    <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileChange} />
+                    
+                    {/* Add Image Button logic */}
+                    {(form.contentType === 'post' || (form.contentType === 'video' && imageItems.length === 0)) && (
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="aspect-square border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 hover:border-emerald-400 hover:text-emerald-500 transition-colors"
+                        >
+                            <Camera size={20} className="mb-1" />
+                            <span className="text-[10px] font-medium">เพิ่มรูป</span>
+                        </div>
+                    )}
+                    <input type="file" ref={fileInputRef} hidden multiple={form.contentType === 'post'} accept="image/*" onChange={handleFileChange} />
                 </div>
+
+                {/* VIDEO UPLOADER (Only in video mode) */}
+                {form.contentType === 'video' && (
+                    <div className="mt-6 pt-4 border-t border-slate-100">
+                         <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-bold text-slate-800">
+                                ไฟล์วิดีโอ
+                            </label>
+                            {videoPreviewUrl && (
+                                <button type="button" onClick={handleRemoveVideo} className="text-xs text-red-500 hover:underline">ลบวิดีโอ</button>
+                            )}
+                        </div>
+
+                        {videoPreviewUrl ? (
+                            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-slate-200">
+                                <video src={videoPreviewUrl} controls className="w-full h-full" />
+                            </div>
+                        ) : (
+                             <div 
+                                onClick={() => videoInputRef.current?.click()}
+                                className="w-full aspect-video border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:bg-slate-50 hover:border-red-400 hover:text-red-500 transition-colors bg-slate-50"
+                            >
+                                <Film size={32} className="mb-2 opacity-50" />
+                                <span className="text-sm font-medium">อัปโหลดวิดีโอ</span>
+                                <span className="text-[10px] opacity-70 mt-1">MP4, MOV (max 100MB)</span>
+                            </div>
+                        )}
+                        <input type="file" ref={videoInputRef} hidden accept="video/*" onChange={handleVideoFileChange} />
+                    </div>
+                )}
              </div>
           </div>
 

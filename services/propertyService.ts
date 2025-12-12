@@ -124,7 +124,7 @@ export const updateProperty = async (id: string, data: Partial<Property>) => {
   await db.collection(COLLECTION_NAME).doc(id).update(data);
 };
 
-export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => {
+export const addProperty = async (form: SubmissionForm, imageUrls: string[], videoUrl?: string) => {
   if (!db) throw new Error("Firestore not initialized");
 
   const propertyData = {
@@ -134,7 +134,7 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
     type: form.type,
     location: form.location || "พะเยา", // Use form location or default
     size: form.size,
-    image: imageUrls[0] || '',
+    image: imageUrls[0] || '', // Cover image
     images: imageUrls,
     contactName: form.name,
     contactPhone: form.phone,
@@ -145,7 +145,9 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     status: form.status || 'active', // Use form status
     viewCount: 0, // Initialize view count
-    isRecommended: form.isRecommended || false // Initialize recommended status
+    isRecommended: form.isRecommended || false, // Initialize recommended status
+    contentType: form.contentType || 'post',
+    videoUrl: videoUrl || ''
   };
 
   const docRef = await db.collection(COLLECTION_NAME).add(propertyData);
@@ -185,6 +187,35 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
   });
 
   return Promise.all(uploadPromises);
+};
+
+export const uploadVideo = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET); 
+
+    try {
+      // Note: Endpoint changes to /video/upload
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Cloudinary Video Error:", data);
+        throw new Error(data.error?.message || "Video upload failed");
+      }
+
+      return data.secure_url;
+    } catch (error) {
+      console.error("Error uploading video to Cloudinary:", error);
+      throw error;
+    }
 };
 
 export const submitUserLead = async (form: SubmissionForm, imageUrls: string[]) => {

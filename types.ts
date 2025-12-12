@@ -5,6 +5,8 @@ export enum PropertyType {
   DORMITORY = 'หอพัก'
 }
 
+export type ContentType = 'post' | 'video';
+
 export interface Property {
   id: string;
   title: string;
@@ -24,7 +26,9 @@ export interface Property {
   createdAt?: any;
   status?: string; // 'active' | 'sold'
   viewCount?: number;
-  isRecommended?: boolean; // Added recommended flag
+  isRecommended?: boolean;
+  contentType?: ContentType; // New: 'post' or 'video'
+  videoUrl?: string; // New: URL for the video file
 }
 
 export interface SubmissionForm {
@@ -40,7 +44,9 @@ export interface SubmissionForm {
   images: File[];
   status: string;
   location?: string;
-  isRecommended?: boolean; // Added recommended flag
+  isRecommended?: boolean;
+  contentType?: ContentType; // New
+  video?: File | null; // New: File object for upload
 }
 
 // New Types for Leads Management
