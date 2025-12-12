@@ -21,29 +21,44 @@ const HomePage: React.FC = () => {
       />
 
       {/* Hero Section */}
-      <div className="bg-emerald-600 text-white relative overflow-hidden md:mt-0">
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24 relative z-10">
+      <div className="relative text-white overflow-hidden md:mt-0 min-h-[500px] flex items-center">
+        
+        {/* Background Image: Kwan Phayao View */}
+        <div className="absolute inset-0 z-0">
+            <img 
+                src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop" 
+                alt="Kwan Phayao View" 
+                className="w-full h-full object-cover"
+            />
+            {/* Gradient Overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-900/70 to-emerald-900/20 md:to-transparent"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24 relative z-10 w-full">
             <div className="flex flex-col md:flex-row items-center justify-between">
-                <div className="md:w-1/2 mb-8 md:mb-0">
-                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                <div className="md:w-3/5 mb-8 md:mb-0">
+                    <div className="inline-block bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-100 px-4 py-1 rounded-full text-sm font-medium mb-4">
+                        📍 ทรัพย์ดี ทำเลทอง จังหวัดพะเยา
+                    </div>
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight drop-shadow-lg">
                         ขายบ้านและที่ดิน<br/>
                         <span className="text-emerald-200">ราคาถูก พะเยา</span>
                     </h1>
-                    <p className="text-emerald-100 text-lg md:text-xl mb-8 max-w-md">
+                    <p className="text-emerald-50 text-lg md:text-xl mb-8 max-w-lg drop-shadow-md">
                         ศูนย์รวมอสังหาริมทรัพย์พะเยา บ้านมือสอง ที่ดินสวย หอพักน่าลงทุน คัดสรรทรัพย์คุณภาพดี ราคาโดนใจ
                     </p>
                     
                     <div className="flex flex-col sm:flex-row gap-3 max-w-md">
                         <button 
                             onClick={() => navigate('/list')}
-                            className="bg-white text-emerald-700 py-3.5 px-6 rounded-xl shadow-lg flex items-center justify-center font-bold hover:bg-emerald-50 transition-colors w-full sm:w-auto"
+                            className="bg-white text-emerald-800 py-3.5 px-6 rounded-xl shadow-lg flex items-center justify-center font-bold hover:bg-emerald-50 transition-colors w-full sm:w-auto"
                         >
                             <Search size={20} className="mr-2" />
                             ค้นหาบ้าน/ที่ดิน
                         </button>
                         <button 
                             onClick={() => navigate('/submit')}
-                            className="bg-emerald-700 text-white border border-emerald-500 py-3.5 px-6 rounded-xl flex items-center justify-center font-bold hover:bg-emerald-800 transition-colors w-full sm:w-auto"
+                            className="bg-emerald-600/80 backdrop-blur-md text-white border border-emerald-400/50 py-3.5 px-6 rounded-xl flex items-center justify-center font-bold hover:bg-emerald-600 transition-colors w-full sm:w-auto"
                         >
                             <Megaphone size={20} className="mr-2" />
                             ฝากขายทรัพย์กับเรา
@@ -55,17 +70,11 @@ const HomePage: React.FC = () => {
                      </div>
                 </div>
                 
-                {/* Desktop Illustration / Icon */}
-                <div className="hidden md:flex md:w-1/2 justify-center items-center relative">
-                    <div className="absolute w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-30"></div>
-                    <Home size={320} className="text-emerald-100/20 relative z-10" />
+                {/* Desktop Illustration / Spacer */}
+                <div className="hidden md:block md:w-2/5 relative">
+                   {/* Empty space to show the background image */}
                 </div>
             </div>
-        </div>
-        
-        {/* Decorative Background Icon for Mobile */}
-        <div className="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10 md:hidden">
-          <Home size={200} />
         </div>
       </div>
 
