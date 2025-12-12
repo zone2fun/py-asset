@@ -39,7 +39,7 @@ const HomePage: React.FC = () => {
                             className="bg-emerald-700 text-white border border-emerald-500 py-3.5 px-6 rounded-xl flex items-center justify-center font-bold hover:bg-emerald-800 transition-colors w-full sm:w-auto"
                         >
                             <Megaphone size={20} className="mr-2" />
-                            ลงประกาศฟรี
+                            ฝากขายทรัพย์กับเรา
                         </button>
                     </div>
                     
@@ -132,7 +132,7 @@ const HomePage: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-bold text-xl text-slate-800">ฝากขายบ้าน/ที่ดิน</h3>
-                <p className="text-sm text-slate-500 mt-1">เปลี่ยนทรัพย์เป็นเงิน ลงประกาศฟรี การตลาดครบวงจร</p>
+                <p className="text-sm text-slate-500 mt-1">เปลี่ยนทรัพย์เป็นเงิน ฝากขายทรัพย์กับเรา การตลาดครบวงจร</p>
               </div>
             </button>
 

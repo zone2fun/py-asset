@@ -48,7 +48,7 @@ const Navigation: React.FC = () => {
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-all shadow-sm active:scale-95"
           >
             <PlusCircle size={18} className="mr-2" />
-            ลงประกาศฟรี
+            ฝากขายทรัพย์กับเรา
           </Link>
         </div>
       </nav>
