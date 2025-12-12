@@ -1,12 +1,33 @@
-import React from 'react';
-import { Home, Trees, Building, Search, Megaphone, Coins, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Home, Trees, Building, Search, Megaphone, Coins, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PropertyType } from '../types';
+import { PropertyType, Property } from '../types';
+import { getProperties } from '../services/propertyService';
+import PropertyCard from '../components/PropertyCard';
 import InstallPWA from '../components/InstallPWA';
 import SEO from '../components/SEO';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [recommended, setRecommended] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      try {
+        const data = await getProperties('All');
+        // Sort by viewCount descending (popular) or just latest
+        // For "Recommended", we take the first 6 latest items
+        setRecommended(data.slice(0, 6)); 
+      } catch (error) {
+        console.error("Failed to load recommended properties", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommended();
+  }, []);
 
   const handleCategoryClick = (type: PropertyType) => {
     navigate(`/list?type=${type}`);
@@ -78,16 +99,54 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-8 md:mt-16 space-y-12">
+      <div className="max-w-7xl mx-auto px-6 mt-8 md:mt-12 space-y-12">
+        
+        {/* Recommended Properties Slider */}
+        {recommended.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-red-500 pl-3 flex items-center">
+                   ทรัพย์น่าซื้อ <Sparkles size={20} className="ml-2 text-yellow-500 fill-yellow-500" />
+               </h2>
+               <button onClick={() => navigate('/list')} className="text-slate-500 text-sm font-bold flex items-center hover:text-emerald-600 transition-colors">
+                   ดูทั้งหมด <ArrowRight size={16} className="ml-1" />
+               </button>
+            </div>
+            
+            {loading ? (
+                <div className="flex justify-center py-10">
+                    <Loader2 className="animate-spin text-emerald-600" />
+                </div>
+            ) : (
+                <div className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 space-x-4 no-scrollbar snap-x snap-mandatory">
+                    {recommended.map(property => (
+                        <div key={property.id} className="min-w-[280px] md:min-w-[300px] snap-center">
+                            <PropertyCard property={property} />
+                        </div>
+                    ))}
+                    {/* View All Card */}
+                    <div className="min-w-[150px] md:min-w-[180px] snap-center flex items-center justify-center">
+                        <button 
+                            onClick={() => navigate('/list')}
+                            className="w-full h-full min-h-[250px] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors group"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                                <ArrowRight size={24} />
+                            </div>
+                            <span className="font-bold text-sm">ดูเพิ่มเติม</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+          </div>
+        )}
+
         {/* Categories Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-emerald-500 pl-3">
                 เลือกหมวดหมู่ทรัพย์
             </h2>
-            <button onClick={() => navigate('/list')} className="text-emerald-600 text-sm font-bold flex items-center hover:underline">
-                ดูทั้งหมด <ArrowRight size={16} className="ml-1" />
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
