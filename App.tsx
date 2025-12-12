@@ -16,48 +16,52 @@ import ProtectedRoute from './components/ProtectedRoute';
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="max-w-md mx-auto min-h-screen bg-slate-50 relative shadow-2xl">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/list" element={<ListingPage />} />
-          <Route path="/property/:id" element={<PropertyDetailPage />} />
-          <Route path="/submit" element={<SubmitPropertyPage />} />
-          <Route path="/mortgage" element={<MortgagePage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/setup" element={<SetupPage />} />
-          
-          {/* Protected Admin Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute>
-                <AdminDashboardPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/add" 
-            element={
-              <ProtectedRoute>
-                <AdminEditPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/edit/:id" 
-            element={
-              <ProtectedRoute>
-                <AdminEditPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Fallback for unknown routes */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <div className="min-h-screen bg-slate-50 relative font-sans text-slate-900">
         <Navigation />
+        
+        {/* Main Content Area: Padding Top for Desktop Nav, Padding Bottom for Mobile Nav */}
+        <main className="pt-0 md:pt-16 pb-20 md:pb-0 min-h-screen">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/list" element={<ListingPage />} />
+            <Route path="/property/:id" element={<PropertyDetailPage />} />
+            <Route path="/submit" element={<SubmitPropertyPage />} />
+            <Route path="/mortgage" element={<MortgagePage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/setup" element={<SetupPage />} />
+            
+            {/* Protected Admin Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/add" 
+              element={
+                <ProtectedRoute>
+                  <AdminEditPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/edit/:id" 
+              element={
+                <ProtectedRoute>
+                  <AdminEditPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Fallback for unknown routes */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

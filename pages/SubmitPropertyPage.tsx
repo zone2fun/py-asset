@@ -177,13 +177,15 @@ ${galleryLink}
   }
 
   return (
-    <div className="pb-24 bg-white min-h-screen">
-       <div className="bg-emerald-600 px-6 py-8 rounded-b-[2rem] shadow-sm mb-6">
+    <div className="pb-24 bg-slate-50 min-h-screen md:py-10">
+      <div className="max-w-2xl mx-auto bg-white md:rounded-2xl md:shadow-lg md:border border-slate-100 overflow-hidden">
+        
+       <div className="bg-emerald-600 px-6 py-8 md:py-6 shadow-sm mb-6">
         <h1 className="text-2xl font-bold text-white mb-1">ฝากขายทรัพย์</h1>
         <p className="text-emerald-100 text-sm">กรอกข้อมูลเพื่อให้เราช่วยทำการตลาดฟรี</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-6 space-y-6">
+      <form onSubmit={handleSubmit} className="px-6 pb-8 space-y-6">
         
         {/* Images */}
         <div className="space-y-2">
@@ -239,11 +241,12 @@ ${galleryLink}
             </div>
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">
+        <button type="submit" disabled={isSubmitting} className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed hover:bg-slate-900 transition-colors">
             {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight size={20} className="mr-2" />}
             บันทึกและไปต่อ
         </button>
       </form>
+     </div>
     </div>
   );
 };

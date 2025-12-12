@@ -77,73 +77,87 @@ const ListingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 bg-slate-50">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 shadow-sm sticky top-0 z-40 flex items-center justify-between">
-        <button 
-            onClick={() => navigate('/')}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
-        >
-            <ArrowLeft size={20} />
-        </button>
-        <h1 className="font-bold text-base text-slate-800">
-            {selectedType === 'All' ? 'รายการทรัพย์ทั้งหมด' : selectedType}
-        </h1>
-        <div className="w-9" /> {/* Spacer for centering */}
-      </div>
+    <div className="min-h-screen pb-24 md:pb-12 bg-slate-50">
+      <div className="max-w-7xl mx-auto md:px-6">
+        {/* Header & Controls */}
+        <div className="bg-white md:bg-transparent px-4 py-3 md:pt-8 md:pb-4 shadow-sm md:shadow-none sticky md:static top-0 z-40">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center">
+                    <button 
+                        onClick={() => navigate('/')}
+                        className="p-2 rounded-full hover:bg-slate-100 text-slate-600 mr-2 md:hidden"
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
+                    <h1 className="font-bold text-xl text-slate-800">
+                        {selectedType === 'All' ? 'รายการทรัพย์ทั้งหมด' : selectedType}
+                    </h1>
+                    <span className="hidden md:inline-block ml-3 text-sm text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        {sortedProperties.length} รายการ
+                    </span>
+                </div>
 
-      {/* Filter Chips */}
-      <div className="flex overflow-x-auto px-4 py-3 space-x-2 no-scrollbar bg-white border-b border-slate-100 sticky top-[53px] z-30">
-        {['All', PropertyType.HOUSE, PropertyType.LAND, PropertyType.DORMITORY].map((type) => (
-            <button
-                key={type}
-                onClick={() => handleTypeChange(type as PropertyType | 'All')}
-                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border ${
-                    selectedType === type 
-                    ? 'bg-emerald-600 border-emerald-600 text-white' 
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-            >
-                {type === 'All' ? 'ทั้งหมด' : type}
-            </button>
-        ))}
-      </div>
+                <div className="flex items-center justify-between gap-3">
+                    {/* Filter Chips */}
+                    <div className="flex overflow-x-auto no-scrollbar space-x-2 pb-1 md:pb-0">
+                        {['All', PropertyType.HOUSE, PropertyType.LAND, PropertyType.DORMITORY].map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => handleTypeChange(type as PropertyType | 'All')}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
+                                    selectedType === type 
+                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                                }`}
+                            >
+                                {type === 'All' ? 'ทั้งหมด' : type}
+                            </button>
+                        ))}
+                    </div>
 
-      {/* Sorting Control */}
-      <div className="px-4 py-2 flex justify-between items-center bg-slate-50">
-        <span className="text-xs text-slate-500 font-medium">พบ {sortedProperties.length} รายการ</span>
-        <div className="flex items-center space-x-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
-            <ArrowUpDown size={12} className="text-slate-400" />
-            <select 
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none appearance-none pr-4 relative z-10 cursor-pointer"
-                style={{ backgroundImage: 'none' }} 
-            >
-                <option value="newest">ล่าสุด (ใหม่ ➜ เก่า)</option>
-                <option value="price_asc">ราคา (ต่ำ ➜ สูง)</option>
-                <option value="price_desc">ราคา (สูง ➜ ต่ำ)</option>
-            </select>
+                    {/* Sorting Control */}
+                    <div className="flex items-center space-x-1 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm ml-auto">
+                        <ArrowUpDown size={14} className="text-slate-400" />
+                        <select 
+                            value={sortOrder}
+                            onChange={(e) => setSortOrder(e.target.value)}
+                            className="text-sm font-bold text-slate-700 bg-transparent border-none outline-none appearance-none pr-4 relative z-10 cursor-pointer focus:ring-0"
+                            style={{ backgroundImage: 'none' }} 
+                        >
+                            <option value="newest">ล่าสุด</option>
+                            <option value="price_asc">ราคาต่ำสุด</option>
+                            <option value="price_desc">ราคาสูงสุด</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="md:hidden mt-2 text-xs text-slate-500 font-medium">
+                พบ {sortedProperties.length} รายการ
+            </div>
         </div>
-      </div>
 
-      {/* List */}
-      <div className="px-4 grid grid-cols-2 gap-3 mt-2">
-        {loading ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 text-emerald-600">
-                <Loader2 size={32} className="animate-spin mb-2" />
-                <p className="text-sm">กำลังโหลดข้อมูล...</p>
-            </div>
-        ) : sortedProperties.length > 0 ? (
-            sortedProperties.map(property => (
-                <PropertyCard key={property.id} property={property} />
-            ))
-        ) : (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-400">
-                <Filter size={48} className="mb-4 opacity-20" />
-                <p>ไม่พบรายการทรัพย์ในหมวดหมู่นี้</p>
-            </div>
-        )}
+        {/* List */}
+        <div className="px-4 md:px-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6 mt-4">
+            {loading ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-32 text-emerald-600">
+                    <Loader2 size={40} className="animate-spin mb-3" />
+                    <p className="text-base font-medium">กำลังโหลดข้อมูล...</p>
+                </div>
+            ) : sortedProperties.length > 0 ? (
+                sortedProperties.map(property => (
+                    <PropertyCard key={property.id} property={property} />
+                ))
+            ) : (
+                <div className="col-span-full flex flex-col items-center justify-center py-32 text-slate-400 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <Filter size={64} className="mb-4 opacity-20" />
+                    <p className="text-lg font-medium">ไม่พบรายการทรัพย์ในหมวดหมู่นี้</p>
+                    <button onClick={() => setSelectedType('All')} className="mt-4 text-emerald-600 font-bold hover:underline">
+                        ดูรายการทั้งหมด
+                    </button>
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );

@@ -40,7 +40,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
       <div className="bg-slate-800 text-white px-6 py-4 sticky top-0 z-40 flex justify-between items-center shadow-md">
         <h1 className="font-bold text-lg">จัดการทรัพย์สิน</h1>
         <button onClick={handleLogout} className="text-slate-300 hover:text-white">
@@ -48,28 +48,29 @@ const AdminDashboardPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="p-4">
-        <button
-          onClick={() => navigate('/admin/add')}
-          className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-sm flex items-center justify-center font-bold mb-6"
-        >
-          <Plus size={20} className="mr-2" />
-          เพิ่มทรัพย์ใหม่
-        </button>
-
-        <h2 className="text-slate-700 font-bold mb-4">รายการทั้งหมด ({properties.length})</h2>
+      <div className="p-4 md:p-8 max-w-5xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-slate-700 font-bold text-xl">รายการทั้งหมด ({properties.length})</h2>
+            <button
+                onClick={() => navigate('/admin/add')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-6 rounded-lg shadow-sm flex items-center font-bold transition-colors"
+            >
+                <Plus size={20} className="mr-2" />
+                เพิ่มทรัพย์ใหม่
+            </button>
+        </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="animate-spin text-emerald-600" />
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-emerald-600" size={32} />
           </div>
         ) : (
           <div className="space-y-4">
             {properties.map((p) => {
               const isSold = p.status === 'sold';
               return (
-                <div key={p.id} className={`bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 ${isSold ? 'bg-slate-50' : ''}`}>
-                  <div className="relative w-20 h-20 flex-shrink-0">
+                <div key={p.id} className={`bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 items-center ${isSold ? 'bg-slate-50' : ''} hover:border-emerald-200 transition-colors`}>
+                  <div className="relative w-24 h-24 flex-shrink-0">
                     <img 
                       src={p.image} 
                       alt={p.title} 
@@ -85,37 +86,37 @@ const AdminDashboardPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
                       <div className="flex gap-1 flex-wrap">
-                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded whitespace-nowrap border border-slate-200">
+                        <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md whitespace-nowrap border border-slate-200 font-medium">
                           {p.type}
                         </span>
                         {isSold && (
-                          <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold whitespace-nowrap border border-red-200">
+                          <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-bold whitespace-nowrap border border-red-200">
                             ขายแล้ว
                           </span>
                         )}
                       </div>
-                      <span className={`font-bold text-sm ${isSold ? 'text-slate-400 line-through' : 'text-emerald-600'}`}>
+                      <span className={`font-bold text-lg ${isSold ? 'text-slate-400 line-through' : 'text-emerald-600'}`}>
                         ฿{p.price.toLocaleString()}
                       </span>
                     </div>
                     
-                    <h3 className={`font-bold text-sm truncate my-1 ${isSold ? 'text-slate-500' : 'text-slate-800'}`}>
+                    <h3 className={`font-bold text-base truncate my-1 ${isSold ? 'text-slate-500' : 'text-slate-800'}`}>
                       {p.title}
                     </h3>
-                    <p className="text-xs text-slate-500 truncate">{p.location}</p>
+                    <p className="text-sm text-slate-500 truncate">{p.location}</p>
                     
-                    <div className="flex justify-end space-x-2 mt-2">
+                    <div className="flex justify-end space-x-2 mt-3 md:mt-1">
                       <button 
                         onClick={() => navigate(`/admin/edit/${p.id}`)}
-                        className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-100"
+                        className="flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-100 text-sm font-medium transition-colors"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} className="mr-1.5" /> แก้ไข
                       </button>
                       <button 
                         onClick={() => handleDelete(p.id)}
-                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100"
+                        className="flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 text-sm font-medium transition-colors"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} className="mr-1.5" /> ลบ
                       </button>
                     </div>
                   </div>
