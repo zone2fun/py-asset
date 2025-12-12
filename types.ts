@@ -23,6 +23,7 @@ export interface Property {
   contactPhone?: string;
   createdAt?: any;
   status?: string; // 'active' | 'sold'
+  viewCount?: number; // Added view count
 }
 
 export interface SubmissionForm {

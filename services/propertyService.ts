@@ -61,6 +61,18 @@ export const getPropertyById = async (id: string): Promise<Property | undefined>
   }
 };
 
+export const incrementViewCount = async (id: string) => {
+  if (!db) return;
+  try {
+    const docRef = db.collection(COLLECTION_NAME).doc(id);
+    await docRef.update({
+      viewCount: firebase.firestore.FieldValue.increment(1)
+    });
+  } catch (error) {
+    console.error("Error incrementing view count:", error);
+  }
+};
+
 // --- LEADS MANAGEMENT (New) ---
 
 export const getLeads = async (): Promise<Lead[]> => {
@@ -131,7 +143,8 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
       lng: form.longitude
     } : null,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    status: form.status || 'active' // Use form status
+    status: form.status || 'active', // Use form status
+    viewCount: 0 // Initialize view count
   };
 
   const docRef = await db.collection(COLLECTION_NAME).add(propertyData);

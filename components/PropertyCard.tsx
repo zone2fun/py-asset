@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, MessageCircle } from 'lucide-react';
+import { MapPin, MessageCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../types';
 import { getPropertyInquiryUrl } from '../services/lineService';
@@ -63,7 +63,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         </div>
 
         {/* Quick Action Button (Secondary) */}
-        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-end">
+        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+             {/* View Count (Bottom Left) */}
+            <div className="flex items-center text-slate-400 text-[10px] font-medium" title="จำนวนคนดู">
+               <Eye size={12} className="mr-1" />
+               {property.viewCount ? property.viewCount.toLocaleString() : 0}
+            </div>
+
             <button 
                 onClick={isSold ? undefined : handleInquiry}
                 disabled={isSold}

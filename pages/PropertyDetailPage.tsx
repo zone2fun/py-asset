@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2, Facebook, Link as LinkIcon, Check, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLeft, ChevronRight, Loader2, Facebook, Link as LinkIcon, Check, X, Eye } from 'lucide-react';
 import { getPropertyInquiryUrl } from '../services/lineService';
-import { getPropertyById } from '../services/propertyService';
+import { getPropertyById, incrementViewCount } from '../services/propertyService';
 import { Property } from '../types';
 import SEO from '../components/SEO';
 
@@ -25,6 +25,11 @@ const PropertyDetailPage: React.FC = () => {
     const fetchProperty = async () => {
       if (id) {
         setLoading(true);
+        
+        // 1. Increment View Count (Fire and forget)
+        incrementViewCount(id);
+
+        // 2. Load Data
         const data = await getPropertyById(id);
         setProperty(data);
         setLoading(false);
@@ -265,9 +270,16 @@ const PropertyDetailPage: React.FC = () => {
                                 ปิดการขายแล้ว
                             </span>
                         )}
+                        
+                        {/* VIEW COUNT BADGE (Detail Page) */}
+                        <div className="flex items-center text-slate-400 text-xs bg-slate-100 px-2 py-1 rounded-md ml-auto md:ml-2">
+                           <Eye size={12} className="mr-1" />
+                           {property.viewCount ? (property.viewCount + 1).toLocaleString() : 1}
+                        </div>
+
                         <button 
                             onClick={handleShare} 
-                            className="hidden md:flex ml-auto text-slate-400 hover:text-emerald-600 items-center text-sm font-medium transition-colors"
+                            className="hidden md:flex ml-auto md:ml-2 text-slate-400 hover:text-emerald-600 items-center text-sm font-medium transition-colors"
                         >
                             <Share2 size={16} className="mr-1" /> แชร์
                         </button>
