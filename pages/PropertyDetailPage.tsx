@@ -144,7 +144,7 @@ const PropertyDetailPage: React.FC = () => {
   // ==========================================
   if (isVideoReview) {
       return (
-        <div className="bg-black min-h-screen pb-20 md:pb-0">
+        <div className="bg-black min-h-screen pb-28 md:pb-0">
           <SEO 
             title={`VIDEO: ${property.title}`} 
             description={property.description} 
@@ -231,7 +231,7 @@ const PropertyDetailPage: React.FC = () => {
               </p>
 
               {/* Fixed Bottom Action for Video Page */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 md:relative md:border-none md:p-0">
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 md:relative md:border-none md:p-0 z-[60] md:z-auto">
                    <button 
                         onClick={handleContact}
                         disabled={isSold}
