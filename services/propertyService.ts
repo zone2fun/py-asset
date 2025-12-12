@@ -144,7 +144,8 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[]) => 
     } : null,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     status: form.status || 'active', // Use form status
-    viewCount: 0 // Initialize view count
+    viewCount: 0, // Initialize view count
+    isRecommended: form.isRecommended || false // Initialize recommended status
   };
 
   const docRef = await db.collection(COLLECTION_NAME).add(propertyData);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle, Star } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -70,7 +70,8 @@ const AdminEditPage: React.FC = () => {
     latitude: null,
     longitude: null,
     images: [],
-    status: 'active'
+    status: 'active',
+    isRecommended: false
   });
 
   const isEditMode = !!id;
@@ -205,7 +206,8 @@ const AdminEditPage: React.FC = () => {
         latitude: prop.coordinates?.lat || null,
         longitude: prop.coordinates?.lng || null,
         images: [],
-        status: prop.status || 'active'
+        status: prop.status || 'active',
+        isRecommended: prop.isRecommended || false
       });
       
       const existingImages = prop.images && prop.images.length > 0 ? prop.images : [prop.image];
@@ -361,6 +363,13 @@ const AdminEditPage: React.FC = () => {
     }));
   };
 
+  const toggleRecommended = () => {
+    setForm(prev => ({
+      ...prev,
+      isRecommended: !prev.isRecommended
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imageItems.length === 0) {
@@ -402,7 +411,8 @@ const AdminEditPage: React.FC = () => {
         images: finalImages,
         coordinates: coordinates,
         status: form.status,
-        location: finalLocation
+        location: finalLocation,
+        isRecommended: form.isRecommended
       };
 
       if (isEditMode && id) {
@@ -469,21 +479,46 @@ const AdminEditPage: React.FC = () => {
           <div className="lg:col-span-4 space-y-6">
              
              {/* Status Card */}
-             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold text-slate-800">สถานะประกาศ</span>
-                    <button 
-                        type="button" 
-                        onClick={toggleStatus}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.status === 'active' ? 'bg-green-500' : 'bg-slate-300'}`}
-                    >
-                        <span 
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.status === 'active' ? 'translate-x-6' : 'translate-x-1'}`} 
-                        />
-                    </button>
+             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                {/* Sale Status */}
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-slate-800">สถานะประกาศ</span>
+                        <button 
+                            type="button" 
+                            onClick={toggleStatus}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.status === 'active' ? 'bg-green-500' : 'bg-slate-300'}`}
+                        >
+                            <span 
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.status === 'active' ? 'translate-x-6' : 'translate-x-1'}`} 
+                            />
+                        </button>
+                    </div>
+                    <div className={`text-xs font-medium px-2 py-1 rounded inline-block ${form.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {form.status === 'active' ? '● กำลังขาย (Active)' : '● ปิดการขายแล้ว (Sold)'}
+                    </div>
                 </div>
-                <div className={`text-xs font-medium px-2 py-1 rounded inline-block ${form.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {form.status === 'active' ? '● กำลังขาย (Active)' : '● ปิดการขายแล้ว (Sold)'}
+
+                {/* Recommended Toggle */}
+                <div className="pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-slate-800 flex items-center">
+                            <Star size={14} className="mr-1 text-yellow-500 fill-yellow-500" />
+                            ทรัพย์น่าซื้อ (แนะนำ)
+                        </span>
+                        <button 
+                            type="button" 
+                            onClick={toggleRecommended}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.isRecommended ? 'bg-yellow-400' : 'bg-slate-300'}`}
+                        >
+                            <span 
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.isRecommended ? 'translate-x-6' : 'translate-x-1'}`} 
+                            />
+                        </button>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                        {form.isRecommended ? 'จะแสดงในส่วน "ทรัพย์น่าซื้อ" หน้าแรก' : 'แสดงเป็นทรัพย์ทั่วไป'}
+                    </p>
                 </div>
              </div>
 

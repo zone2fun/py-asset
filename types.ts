@@ -23,7 +23,8 @@ export interface Property {
   contactPhone?: string;
   createdAt?: any;
   status?: string; // 'active' | 'sold'
-  viewCount?: number; // Added view count
+  viewCount?: number;
+  isRecommended?: boolean; // Added recommended flag
 }
 
 export interface SubmissionForm {
@@ -37,8 +38,9 @@ export interface SubmissionForm {
   latitude: number | null;
   longitude: number | null;
   images: File[];
-  status: string; // Added status field
-  location?: string; // Added specific location string (e.g. District)
+  status: string;
+  location?: string;
+  isRecommended?: boolean; // Added recommended flag
 }
 
 // New Types for Leads Management
