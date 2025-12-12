@@ -72,15 +72,31 @@ const PropertyDetailPage: React.FC = () => {
     }
   };
 
+  // Helper to create a URL rich with metadata (for bots)
+  const getRichShareUrl = () => {
+    if (!property) return window.location.href;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const params = new URLSearchParams();
+    
+    // Embed data for SEO component to read instantly
+    params.set('og_title', property.title);
+    params.set('og_desc', property.description.substring(0, 150));
+    params.set('og_image', property.image);
+    params.set('og_price', property.price.toString());
+    
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   const handleShare = () => {
+    const richUrl = getRichShareUrl();
     // Try Native Share first (Mobile)
     if (navigator.share) {
       navigator.share({
         title: property?.title,
         text: `แนะนำทรัพย์: ${property?.title} ราคา ${property?.price.toLocaleString()}`,
-        url: window.location.href,
+        url: richUrl, // Share the rich URL
       }).catch(() => {
-        // Fallback to modal if native share fails or is cancelled
+        // Fallback
       });
     } else {
       setShowShareModal(true);
@@ -88,26 +104,35 @@ const PropertyDetailPage: React.FC = () => {
   };
 
   const handleShareFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+    const richUrl = getRichShareUrl();
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(richUrl)}`, '_blank');
     setShowShareModal(false);
   };
 
   const handleShareLine = () => {
     if (!property) return;
+    const richUrl = getRichShareUrl();
     const shareText = `แนะนำทรัพย์นี้ครับ: ${property.title}\nราคา: ฿${property.price.toLocaleString()}\nทำเล: ${property.location}`;
-    const shareUrl = window.location.href;
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + richUrl)}`;
     window.open(lineUrl, '_blank');
     setShowShareModal(false);
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => {
-        setCopied(false);
-        setShowShareModal(false);
-    }, 1500);
+  const handleCopyLink = async () => {
+    if (!property) return;
+    const richUrl = getRichShareUrl();
+    const copyText = `${property.title}\nราคา: ฿${property.price.toLocaleString()}\n${richUrl}`;
+    
+    try {
+        await navigator.clipboard.writeText(copyText);
+        setCopied(true);
+        setTimeout(() => {
+            setCopied(false);
+            setShowShareModal(false);
+        }, 1500);
+    } catch (err) {
+        console.error('Failed to copy', err);
+    }
   };
 
   const handleContact = () => {

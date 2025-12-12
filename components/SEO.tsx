@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 
 interface SEOProps {
   title?: string;
@@ -20,22 +21,29 @@ const SEO: React.FC<SEOProps> = ({
   type = 'website',
   price
 }) => {
+  const location = useLocation();
+  // Parse URL parameters for "Instant Metadata" (Optimization for CSR sharing)
+  const searchParams = new URLSearchParams(location.search);
+  
   const siteTitle = "Phayao Asset Hub - ศูนย์รวมบ้านและที่ดินพะเยา";
   const defaultDescription = "ค้นหาบ้าน ที่ดิน หอพัก และอสังหาริมทรัพย์ในจังหวัดพะเยา ราคาถูก ทำเลดี เจ้าของขายเอง";
   const defaultKeywords = "ขายบ้านพะเยา, ที่ดินพะเยา, บ้านมือสอง, หอพักพะเยา, อสังหาพะเยา";
   const siteUrl = window.location.origin;
   const defaultImage = "https://cdn-icons-png.flaticon.com/512/619/619153.png";
 
-  const metaTitle = title ? `${title} | Phayao Asset Hub` : siteTitle;
-  const metaDescription = description || defaultDescription;
-  const metaKeywords = keywords || defaultKeywords;
-  const metaImage = image || defaultImage;
+  // Priority: 1. URL Params (Fastest for bots) -> 2. Props (Real data) -> 3. Defaults
+  const metaTitle = searchParams.get('og_title') || (title ? `${title} | Phayao Asset Hub` : siteTitle);
+  const metaDescription = searchParams.get('og_desc') || description || defaultDescription;
+  const metaImage = searchParams.get('og_image') || image || defaultImage;
   const metaUrl = url || window.location.href;
   
-  // If price is provided, switch type to 'product' to help FB understand it's an item for sale
-  const metaType = price ? 'product' : type;
+  const rawPrice = searchParams.get('og_price');
+  const metaPrice = rawPrice ? parseFloat(rawPrice) : price;
+  
+  // If price exists, treat as product
+  const metaType = metaPrice ? 'product' : type;
 
-  // Schema.org Structured Data for Local Business / Real Estate
+  // Schema.org Structured Data
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
@@ -49,10 +57,10 @@ const SEO: React.FC<SEOProps> = ({
       "addressCountry": "TH"
     },
     "url": siteUrl,
-    ...(price && {
+    ...(metaPrice && {
       "offers": {
         "@type": "Offer",
-        "price": price,
+        "price": metaPrice,
         "priceCurrency": "THB",
         "availability": "https://schema.org/InStock"
       }
@@ -64,7 +72,7 @@ const SEO: React.FC<SEOProps> = ({
       {/* Standard Metadata */}
       <title>{metaTitle}</title>
       <meta name="description" content={metaDescription} />
-      <meta name="keywords" content={metaKeywords} />
+      <meta name="keywords" content={keywords || defaultKeywords} />
 
       {/* Open Graph / Facebook */}
       <meta property="og:site_name" content="Phayao Asset Hub" />
@@ -73,14 +81,16 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={metaTitle} />
       
-      {/* Product Specific Tags (For Facebook Marketplace/Rich Snippets) */}
-      {price && (
+      {/* Product Specific Tags */}
+      {metaPrice && (
         <>
-          <meta property="product:price:amount" content={price.toString()} />
+          <meta property="product:price:amount" content={metaPrice.toString()} />
           <meta property="product:price:currency" content="THB" />
-          <meta property="og:price:amount" content={price.toString()} />
+          <meta property="og:price:amount" content={metaPrice.toString()} />
           <meta property="og:price:currency" content="THB" />
         </>
       )}
@@ -92,7 +102,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={metaImage} />
 
-      {/* JSON-LD Structured Data */}
+      {/* JSON-LD */}
       <script type="application/ld+json">
         {JSON.stringify(schemaData)}
       </script>
