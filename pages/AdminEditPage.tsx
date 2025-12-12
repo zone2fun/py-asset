@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Star, Trash2, Crown, MapPin, Sparkles } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages } from '../services/propertyService';
 import { PropertyType, SubmissionForm } from '../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { GoogleGenAI } from "@google/genai";
 
 // Fix for default marker icon in Leaflet with React
 const icon = L.icon({
@@ -84,6 +85,9 @@ const AdminEditPage: React.FC = () => {
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // AI State
+  const [generatingAI, setGeneratingAI] = useState(false);
   
   // Unified Image State
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
@@ -243,6 +247,51 @@ const AdminEditPage: React.FC = () => {
       alert("เกิดข้อผิดพลาดในการค้นหา");
     } finally {
       setSearching(false);
+    }
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!form.title && !form.price) {
+      alert("กรุณากรอก 'หัวข้อ' และ 'ราคา' เพื่อให้ AI มีข้อมูลเบื้องต้นในการแต่งครับ");
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const prompt = `
+        คุณคือนักเขียนโฆษณาขายอสังหาริมทรัพย์มืออาชีพ
+        ช่วยแต่งคำบรรยาย (Description) ให้น่าสนใจ ดึงดูดลูกค้า และอ่านง่าย (ใช้ Emoji ประกอบ)
+        
+        ข้อมูลทรัพย์:
+        - หัวข้อ: ${form.title}
+        - ประเภท: ${form.type}
+        - ราคา: ${form.price} บาท
+        - ขนาด: ${form.size || 'ไม่ระบุ'}
+        - ทำเล: ${selectedDistrict}, จังหวัดพะเยา
+        - ข้อมูลเพิ่มเติมที่ผู้ขายร่างไว้: ${form.description}
+        
+        สิ่งที่ต้องการในคำตอบ:
+        1. พาดหัวให้น่าตื่นเต้น
+        2. ลิสต์จุดเด่นเป็นข้อๆ
+        3. เขียนเชียร์ให้ดูคุ้มค่า
+        4. ปิดท้ายด้วยการกระตุ้นให้รีบติดต่อ
+        (ขอเป็นภาษาไทยที่สุภาพและเป็นกันเอง)
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      if (response.text) {
+        setForm(prev => ({ ...prev, description: response.text || "" }));
+      }
+    } catch (error) {
+      console.error("AI Error:", error);
+      alert("เกิดข้อผิดพลาดในการเรียกใช้ AI กรุณาลองใหม่");
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -458,10 +507,22 @@ const AdminEditPage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">รายละเอียด</label>
+          <div className="flex justify-between items-end mb-1">
+            <label className="block text-sm font-medium text-slate-700">รายละเอียด</label>
+            <button 
+                type="button" 
+                onClick={handleGenerateDescription}
+                disabled={generatingAI}
+                className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg font-bold flex items-center transition-colors disabled:opacity-50"
+            >
+                {generatingAI ? <Loader2 size={14} className="animate-spin mr-1" /> : <Sparkles size={14} className="mr-1" />}
+                {generatingAI ? 'AI กำลังคิด...' : 'ให้ AI ช่วยแต่ง'}
+            </button>
+          </div>
           <textarea 
              name="description" value={form.description} onChange={handleInputChange}
-             className="w-full p-3 border rounded-xl h-24"
+             className="w-full p-3 border rounded-xl h-40"
+             placeholder="ใส่รายละเอียดคร่าวๆ แล้วกดปุ่มให้ AI ช่วยแต่งให้ได้เลยครับ..."
           />
         </div>
 
