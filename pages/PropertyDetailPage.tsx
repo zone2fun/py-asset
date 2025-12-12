@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Ruler, Navigation, MessageCircle, Share2, ChevronLef
 import { getPropertyInquiryUrl } from '../services/lineService';
 import { getPropertyById } from '../services/propertyService';
 import { Property } from '../types';
+import SEO from '../components/SEO';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,7 +103,13 @@ const PropertyDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 md:pb-12">
-      
+      <SEO 
+        title={`${property.title} - ${property.location}`}
+        description={`ประกาศขาย ${property.title} ราคา ${property.price.toLocaleString()} บาท ทำเล ${property.location} ขนาด ${property.size || '-'} รายละเอียด: ${property.description.substring(0, 100)}...`}
+        image={property.image}
+        keywords={`ขาย${property.type}พะเยา, ${property.location}, อสังหาพะเยา`}
+      />
+
       {/* Back Button (Floating on Mobile, Static on Desktop) */}
       <div className="fixed top-4 left-4 md:hidden z-50">
          <button onClick={() => navigate(-1)} className="bg-white/90 p-2 rounded-full shadow-md text-slate-700">

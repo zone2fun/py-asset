@@ -4,6 +4,7 @@ import { ArrowLeft, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import PropertyCard from '../components/PropertyCard';
 import { getProperties } from '../services/propertyService';
 import { PropertyType, Property } from '../types';
+import SEO from '../components/SEO';
 
 const ListingPage: React.FC = () => {
   const location = useLocation();
@@ -76,8 +77,43 @@ const ListingPage: React.FC = () => {
       }
   };
 
+  // Dynamic SEO Generator
+  const getSEO = () => {
+      if (selectedType === PropertyType.HOUSE) {
+          return {
+              title: "ขายบ้านพะเยา บ้านมือสอง ราคาถูก",
+              desc: "รวมประกาศขายบ้านพะเยา บ้านเดี่ยว ทาวน์โฮม บ้านมือสองสภาพดี ในอำเภอเมือง แม่ใจ เชียงคำ และทั่วจังหวัดพะเยา",
+              kw: "ขายบ้านพะเยา, บ้านมือสองพะเยา, บ้านเดี่ยวพะเยา, ซื้อบ้านพะเยา"
+          };
+      } else if (selectedType === PropertyType.LAND) {
+          return {
+              title: "ขายที่ดินพะเยา ราคาถูก เจ้าของขายเอง",
+              desc: "รวมประกาศขายที่ดินพะเยา ที่ดินเปล่า ที่นา ที่สวน ถมแล้ว ทำเลดี เหมาะสร้างบ้านหรือเก็งกำไร",
+              kw: "ขายที่ดินพะเยา, ที่ดินเปล่าพะเยา, ที่ดินราคาถูก, ซื้อที่ดินพะเยา"
+          };
+      } else if (selectedType === PropertyType.DORMITORY) {
+           return {
+              title: "ขายหอพักพะเยา กิจการหอพักน่าลงทุน",
+              desc: "เซ้ง/ขายกิจการหอพักพะเยา หอพักหน้ามอพะเยา อพาร์ทเม้นท์ ผลตอบแทนสูง",
+              kw: "ขายหอพักพะเยา, เซ้งหอพักพะเยา, ลงทุนหอพัก"
+          };
+      }
+      return {
+          title: "รายการทรัพย์ทั้งหมด - ขายบ้านและที่ดินพะเยา",
+          desc: "ดูรายการประกาศขายบ้าน ที่ดิน หอพัก ทั้งหมดในจังหวัดพะเยา อัปเดตล่าสุด",
+          kw: "อสังหาพะเยา, ประกาศขายบ้าน"
+      };
+  };
+
+  const seoData = getSEO();
+
   return (
     <div className="min-h-screen pb-24 md:pb-12 bg-slate-50">
+      <SEO 
+        title={seoData.title}
+        description={seoData.desc}
+        keywords={seoData.kw}
+      />
       <div className="max-w-7xl mx-auto md:px-6">
         {/* Header & Controls */}
         <div className="bg-white md:bg-transparent px-4 py-3 md:pt-8 md:pb-4 shadow-sm md:shadow-none sticky md:static top-0 z-40">

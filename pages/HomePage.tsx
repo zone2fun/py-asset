@@ -3,6 +3,7 @@ import { Home, Trees, Building, Search, Megaphone, Coins, ArrowRight } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { PropertyType } from '../types';
 import InstallPWA from '../components/InstallPWA';
+import SEO from '../components/SEO';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,17 +14,23 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="pb-24 md:pb-12">
+      <SEO 
+        title="ขายบ้านและที่ดินราคาถูก" 
+        description="เว็บรวมประกาศขายบ้านและที่ดินพะเยา ราคาถูก เจ้าของขายเอง บ้านมือสอง ที่ดินเปล่า หอพัก ครบจบในที่เดียว"
+        keywords="ขายบ้านพะเยา, ที่ดินพะเยา ราคาถูก, บ้านมือสองพะเยา, ขายที่ดินพะเยา, บ้านเช่าพะเยา"
+      />
+
       {/* Hero Section */}
       <div className="bg-emerald-600 text-white relative overflow-hidden md:mt-0">
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 lg:py-24 relative z-10">
             <div className="flex flex-col md:flex-row items-center justify-between">
                 <div className="md:w-1/2 mb-8 md:mb-0">
                     <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                        อสังหาฯ พะเยา <br/>
-                        <span className="text-emerald-200">ครบ จบ ในที่เดียว</span>
+                        ขายบ้านและที่ดิน<br/>
+                        <span className="text-emerald-200">ราคาถูก พะเยา</span>
                     </h1>
                     <p className="text-emerald-100 text-lg md:text-xl mb-8 max-w-md">
-                        ศูนย์รวม บ้าน ที่ดิน หอพัก คุณภาพดี คัดสรรมาเพื่อคุณโดยเฉพาะ
+                        ศูนย์รวมอสังหาริมทรัพย์พะเยา บ้านมือสอง ที่ดินสวย หอพักน่าลงทุน คัดสรรทรัพย์คุณภาพดี ราคาโดนใจ
                     </p>
                     
                     <div className="flex flex-col sm:flex-row gap-3 max-w-md">
@@ -32,7 +39,7 @@ const HomePage: React.FC = () => {
                             className="bg-white text-emerald-700 py-3.5 px-6 rounded-xl shadow-lg flex items-center justify-center font-bold hover:bg-emerald-50 transition-colors w-full sm:w-auto"
                         >
                             <Search size={20} className="mr-2" />
-                            ค้นหาทรัพย์
+                            ค้นหาบ้าน/ที่ดิน
                         </button>
                         <button 
                             onClick={() => navigate('/submit')}
@@ -84,7 +91,7 @@ const HomePage: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-bold text-xl md:text-2xl text-slate-800 group-hover:text-emerald-600 transition-colors">บ้านพักอาศัย</h3>
-                <p className="text-sm md:text-base text-slate-500 mt-1">บ้านเดี่ยว ทาวน์โฮม พร้อมอยู่</p>
+                <p className="text-sm md:text-base text-slate-500 mt-1">บ้านเดี่ยว ทาวน์โฮม บ้านมือสองพะเยา</p>
               </div>
             </button>
 
@@ -97,7 +104,7 @@ const HomePage: React.FC = () => {
               </div>
                <div>
                 <h3 className="font-bold text-xl md:text-2xl text-slate-800 group-hover:text-emerald-600 transition-colors">ที่ดิน</h3>
-                <p className="text-sm md:text-base text-slate-500 mt-1">ที่ดินเปล่า ที่นา สวน ทำเลทอง</p>
+                <p className="text-sm md:text-base text-slate-500 mt-1">ที่ดินเปล่า ที่นา สวน ทำเลทอง ราคาถูก</p>
               </div>
             </button>
 
@@ -110,7 +117,7 @@ const HomePage: React.FC = () => {
               </div>
                <div>
                 <h3 className="font-bold text-xl md:text-2xl text-slate-800 group-hover:text-emerald-600 transition-colors">หอพัก</h3>
-                <p className="text-sm md:text-base text-slate-500 mt-1">เพื่อการลงทุน หรือเช่าอยู่</p>
+                <p className="text-sm md:text-base text-slate-500 mt-1">หอพักหน้ามอ หอพักลงทุน</p>
               </div>
             </button>
           </div>
@@ -149,6 +156,17 @@ const HomePage: React.FC = () => {
               </div>
             </button>
           </div>
+        </div>
+        
+        {/* SEO Text Block (Hidden from visual focus but visible to bots) */}
+        <div className="bg-slate-100 p-6 rounded-xl text-sm text-slate-600 leading-relaxed">
+            <h3 className="font-bold text-slate-800 mb-2">ทำไมต้องเลือกซื้อบ้านและที่ดินพะเยากับเรา?</h3>
+            <p>
+                Phayao Asset Hub เป็นเว็บไซต์สื่อกลางสำหรับการ <strong>ซื้อ-ขาย อสังหาริมทรัพย์ในจังหวัดพะเยา</strong> 
+                โดยเฉพาะ ไม่ว่าคุณจะกำลังมองหา <strong>บ้านเดี่ยวพะเยา ราคาถูก</strong>, <strong>ที่ดินเปล่าพะเยา</strong> สำหรับสร้างบ้านหรือทำการเกษตร, 
+                หรือ <strong>บ้านมือสองสภาพดี</strong> ในทำเลทองอย่าง อำเภอเมืองพะเยา, แม่ใจ, เชียงคำ, หรือหน้ามหาวิทยาลัยพะเยา 
+                เรามีรายการทรัพย์อัปเดตใหม่ทุกวัน พร้อมบริการรับฝากขายบ้านและที่ดินฟรี ช่วยให้คุณเข้าถึงกลุ่มลูกค้าเป้าหมายได้อย่างรวดเร็ว
+            </p>
         </div>
       </div>
     </div>
