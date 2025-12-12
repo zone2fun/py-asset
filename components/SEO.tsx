@@ -29,7 +29,7 @@ const SEO: React.FC<SEOProps> = ({
   const defaultDescription = "ค้นหาบ้าน ที่ดิน หอพัก และอสังหาริมทรัพย์ในจังหวัดพะเยา ราคาถูก ทำเลดี เจ้าของขายเอง";
   const defaultKeywords = "ขายบ้านพะเยา, ที่ดินพะเยา, บ้านมือสอง, หอพักพะเยา, อสังหาพะเยา";
   const siteUrl = window.location.origin;
-  const defaultImage = "https://cdn-icons-png.flaticon.com/512/2237/2237533.png";
+  const defaultImage = "https://cdn-icons-png.flaticon.com/512/2163/2163350.png";
 
   // Priority: 1. URL Params (Fastest for bots) -> 2. Props (Real data) -> 3. Defaults
   const metaTitle = searchParams.get('og_title') || (title ? `${title} | PhayaoHome.com` : siteTitle);
@@ -81,8 +81,8 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:width" content="512" />
+      <meta property="og:image:height" content="512" />
       <meta property="og:image:alt" content={metaTitle} />
       
       {/* Product Specific Tags */}
@@ -96,7 +96,7 @@ const SEO: React.FC<SEOProps> = ({
       )}
 
       {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:card" content="summary" />
       <meta name="twitter:url" content={metaUrl} />
       <meta name="twitter:title" content={metaTitle} />
       <meta name="twitter:description" content={metaDescription} />
