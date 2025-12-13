@@ -10,10 +10,12 @@ import SEO from '../components/SEO';
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [recommended, setRecommended] = useState<Property[]>([]);
+  const [hundredK, setHundredK] = useState<Property[]>([]);
   const [videoReviews, setVideoReviews] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   
   const recScrollRef = useRef<HTMLDivElement>(null);
+  const hundredKScrollRef = useRef<HTMLDivElement>(null);
   const videoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +28,11 @@ const HomePage: React.FC = () => {
         if (recData.length === 0) recData = data.slice(0, 6);
         setRecommended(recData);
 
-        // 2. Get Video Reviews
+        // 2. Get Hundred K Properties
+        const hkData = data.filter(p => p.isHundredK === true);
+        setHundredK(hkData);
+
+        // 3. Get Video Reviews
         const vidData = data.filter(p => p.contentType === 'video');
         setVideoReviews(vidData);
 
@@ -178,7 +184,44 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
-        {/* Video Reviews Slider (NEW SECTION) */}
+        {/* Hundred K Properties Slider (NEW) */}
+        {hundredK.length > 0 && (
+          <div className="relative group">
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-l-4 border-orange-500 pl-3 flex items-center">
+                   ทรัพย์หลักแสน <Coins size={20} className="ml-2 text-orange-500 fill-orange-100" />
+               </h2>
+               <div className="flex items-center gap-2">
+                   <div className="hidden md:flex gap-1 mr-2">
+                        <button onClick={() => scroll(hundredKScrollRef, 'left')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button onClick={() => scroll(hundredKScrollRef, 'right')} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
+                   </div>
+               </div>
+            </div>
+            
+            <div className="relative">
+                <button onClick={() => scroll(hundredKScrollRef, 'left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronLeft size={24} /></button>
+                <button onClick={() => scroll(hundredKScrollRef, 'right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white/90 shadow-lg text-slate-800 p-2 rounded-full hidden md:flex hover:scale-110 transition-transform"><ChevronRight size={24} /></button>
+
+                <div 
+                    ref={hundredKScrollRef}
+                    className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 space-x-4 no-scrollbar snap-x snap-mandatory scroll-smooth"
+                >
+                    {hundredK.map(property => (
+                        <div key={property.id} className="min-w-[280px] md:min-w-[300px] snap-center">
+                            <PropertyCard property={property} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+          </div>
+        )}
+
+        {/* Video Reviews Slider */}
         {videoReviews.length > 0 && (
           <div className="relative group">
             <div className="flex items-center justify-between mb-6">
