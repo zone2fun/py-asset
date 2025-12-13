@@ -78,7 +78,7 @@ const AdminEditPage: React.FC = () => {
     images: [],
     status: 'active',
     isRecommended: false,
-    isUnder100k: false,
+    isHundredK: false, // Renamed from isUnder100k
     contentType: 'post', // Default
     video: null
   });
@@ -217,7 +217,7 @@ const AdminEditPage: React.FC = () => {
         images: [],
         status: prop.status || 'active',
         isRecommended: prop.isRecommended || false,
-        isUnder100k: prop.isUnder100k || false,
+        isHundredK: prop.isHundredK || false, // Load renamed field
         contentType: prop.contentType || 'post',
         video: null
       });
@@ -420,10 +420,10 @@ const AdminEditPage: React.FC = () => {
     }));
   };
 
-  const toggleUnder100k = () => {
+  const toggleHundredK = () => {
     setForm(prev => ({
       ...prev,
-      isUnder100k: !prev.isUnder100k
+      isHundredK: !prev.isHundredK
     }));
   };
 
@@ -491,7 +491,7 @@ const AdminEditPage: React.FC = () => {
         status: form.status,
         location: finalLocation,
         isRecommended: form.isRecommended,
-        isUnder100k: form.isUnder100k,
+        isHundredK: form.isHundredK,
         contentType: form.contentType,
         videoUrl: finalVideoUrl
       };
@@ -620,25 +620,25 @@ const AdminEditPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Under 100k Toggle */}
+                {/* Hundred K Toggle */}
                 <div className="pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-bold text-slate-800 flex items-center">
                             <Coins size={14} className="mr-1 text-orange-500" />
-                            ต่ำกว่าแสน (ราคาถูก)
+                            ทรัพย์หลักแสน
                         </span>
                         <button 
                             type="button" 
-                            onClick={toggleUnder100k}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.isUnder100k ? 'bg-orange-500' : 'bg-slate-300'}`}
+                            onClick={toggleHundredK}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.isHundredK ? 'bg-orange-500' : 'bg-slate-300'}`}
                         >
                             <span 
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.isUnder100k ? 'translate-x-6' : 'translate-x-1'}`} 
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.isHundredK ? 'translate-x-6' : 'translate-x-1'}`} 
                             />
                         </button>
                     </div>
                     <p className="text-xs text-slate-500">
-                        {form.isUnder100k ? 'จัดอยู่ในหมวดต่ำกว่าแสน' : 'ราคาปกติ'}
+                        {form.isHundredK ? 'จัดอยู่ในหมวดทรัพย์หลักแสน' : 'ราคาปกติ'}
                     </p>
                 </div>
              </div>

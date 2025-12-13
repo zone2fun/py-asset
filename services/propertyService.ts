@@ -150,7 +150,7 @@ export const addProperty = async (form: SubmissionForm, imageUrls: string[], vid
     status: form.status || 'active', // Use form status
     viewCount: 0, // Initialize view count
     isRecommended: form.isRecommended || false, // Initialize recommended status
-    isUnder100k: form.isUnder100k || false, // Initialize under 100k status
+    isHundredK: form.isHundredK || false, // Renamed: Initialize hundred k status
     contentType: form.contentType || 'post',
     videoUrl: videoUrl || ''
   };
