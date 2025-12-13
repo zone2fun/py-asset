@@ -27,6 +27,7 @@ export interface Property {
   status?: string; // 'active' | 'sold'
   viewCount?: number;
   isRecommended?: boolean;
+  isUnder100k?: boolean; // New field
   contentType?: ContentType; // New: 'post' or 'video'
   videoUrl?: string; // New: URL for the video file
 }
@@ -45,6 +46,7 @@ export interface SubmissionForm {
   status: string;
   location?: string;
   isRecommended?: boolean;
+  isUnder100k?: boolean; // New field
   contentType?: ContentType; // New
   video?: File | null; // New: File object for upload
 }

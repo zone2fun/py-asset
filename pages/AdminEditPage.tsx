@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle, Star, Video, Image as ImageIcon, PlayCircle, Film } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Navigation, Search, Trash2, MapPin, Sparkles, Layout, AlertCircle, Star, Video, Image as ImageIcon, PlayCircle, Film, Coins } from 'lucide-react';
 import { getPropertyById, updateProperty, addProperty, uploadImages, uploadVideo } from '../services/propertyService';
 import { PropertyType, SubmissionForm, ContentType } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -78,6 +78,7 @@ const AdminEditPage: React.FC = () => {
     images: [],
     status: 'active',
     isRecommended: false,
+    isUnder100k: false,
     contentType: 'post', // Default
     video: null
   });
@@ -216,6 +217,7 @@ const AdminEditPage: React.FC = () => {
         images: [],
         status: prop.status || 'active',
         isRecommended: prop.isRecommended || false,
+        isUnder100k: prop.isUnder100k || false,
         contentType: prop.contentType || 'post',
         video: null
       });
@@ -418,6 +420,13 @@ const AdminEditPage: React.FC = () => {
     }));
   };
 
+  const toggleUnder100k = () => {
+    setForm(prev => ({
+      ...prev,
+      isUnder100k: !prev.isUnder100k
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imageItems.length === 0) {
@@ -482,6 +491,7 @@ const AdminEditPage: React.FC = () => {
         status: form.status,
         location: finalLocation,
         isRecommended: form.isRecommended,
+        isUnder100k: form.isUnder100k,
         contentType: form.contentType,
         videoUrl: finalVideoUrl
       };
@@ -607,6 +617,28 @@ const AdminEditPage: React.FC = () => {
                     </div>
                     <p className="text-xs text-slate-500">
                         {form.isRecommended ? 'จะแสดงในส่วน "ทรัพย์น่าซื้อ" หน้าแรก' : 'แสดงเป็นทรัพย์ทั่วไป'}
+                    </p>
+                </div>
+
+                {/* Under 100k Toggle */}
+                <div className="pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-slate-800 flex items-center">
+                            <Coins size={14} className="mr-1 text-orange-500" />
+                            ต่ำกว่าแสน (ราคาถูก)
+                        </span>
+                        <button 
+                            type="button" 
+                            onClick={toggleUnder100k}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.isUnder100k ? 'bg-orange-500' : 'bg-slate-300'}`}
+                        >
+                            <span 
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${form.isUnder100k ? 'translate-x-6' : 'translate-x-1'}`} 
+                            />
+                        </button>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                        {form.isUnder100k ? 'จัดอยู่ในหมวดต่ำกว่าแสน' : 'ราคาปกติ'}
                     </p>
                 </div>
              </div>
