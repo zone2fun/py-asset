@@ -79,24 +79,20 @@ const PropertyDetailPage: React.FC = () => {
     }
   };
 
-  const getRichShareUrl = () => {
-    if (!property) return window.location.href;
-    const baseUrl = window.location.origin + window.location.pathname;
-    const params = new URLSearchParams();
-    params.set('og_title', property.title);
-    params.set('og_desc', property.description.substring(0, 150));
-    params.set('og_image', property.image);
-    params.set('og_price', property.price.toString());
-    return `${baseUrl}?${params.toString()}`;
+  // Generate a clean, short URL (Standard URL)
+  const getShareUrl = () => {
+    if (!id) return window.location.href;
+    // Clean URL: domain.com/property/{id}
+    return `${window.location.origin}/property/${id}`;
   };
 
   const handleShare = () => {
-    const richUrl = getRichShareUrl();
+    const shareUrl = getShareUrl();
     if (navigator.share) {
       navigator.share({
         title: property?.title,
         text: `แนะนำทรัพย์: ${property?.title} ราคา ${property?.price.toLocaleString()}`,
-        url: richUrl,
+        url: shareUrl,
       }).catch(() => {});
     } else {
       setShowShareModal(true);
@@ -104,24 +100,27 @@ const PropertyDetailPage: React.FC = () => {
   };
 
   const handleShareFacebook = () => {
-    const richUrl = getRichShareUrl();
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(richUrl)}`, '_blank');
+    const shareUrl = getShareUrl();
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
     setShowShareModal(false);
   };
 
   const handleShareLine = () => {
     if (!property) return;
-    const richUrl = getRichShareUrl();
-    const shareText = `แนะนำทรัพย์นี้ครับ: ${property.title}\nราคา: ฿${property.price.toLocaleString()}\nทำเล: ${property.location}`;
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + '\n' + richUrl)}`;
+    const shareUrl = getShareUrl();
+    // Short and clean message for LINE
+    const shareText = `${property.title}\nราคา: ฿${property.price.toLocaleString()}\n${shareUrl}`;
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`;
     window.open(lineUrl, '_blank');
     setShowShareModal(false);
   };
 
   const handleCopyLink = async () => {
     if (!property) return;
-    const richUrl = getRichShareUrl();
-    const copyText = `${property.title}\nราคา: ฿${property.price.toLocaleString()}\n${richUrl}`;
+    const shareUrl = getShareUrl();
+    
+    // Copy only the URL for cleaner pasting, or a short summary
+    const copyText = `${property.title}\n${shareUrl}`;
     
     try {
         await navigator.clipboard.writeText(copyText);
