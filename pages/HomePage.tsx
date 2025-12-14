@@ -200,6 +200,9 @@ const HomePage: React.FC = () => {
                             <ChevronRight size={20} />
                         </button>
                    </div>
+                   <button onClick={() => navigate('/list?type=HUNDRED_K')} className="text-slate-500 text-sm font-bold flex items-center hover:text-emerald-600 transition-colors">
+                       ดูทั้งหมด <ArrowRight size={16} className="ml-1" />
+                   </button>
                </div>
             </div>
             
@@ -216,6 +219,14 @@ const HomePage: React.FC = () => {
                             <PropertyCard property={property} />
                         </div>
                     ))}
+                    <div className="min-w-[150px] md:min-w-[180px] snap-center flex items-center justify-center">
+                        <button onClick={() => navigate('/list?type=HUNDRED_K')} className="w-full h-full min-h-[250px] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-orange-400 hover:text-orange-600 transition-colors group">
+                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                                <ArrowRight size={24} />
+                            </div>
+                            <span className="font-bold text-sm">ดูเพิ่มเติม</span>
+                        </button>
+                    </div>
                 </div>
             </div>
           </div>
@@ -237,6 +248,9 @@ const HomePage: React.FC = () => {
                             <ChevronRight size={20} />
                         </button>
                    </div>
+                   <button onClick={() => navigate('/list?type=VIDEO')} className="text-slate-500 text-sm font-bold flex items-center hover:text-emerald-600 transition-colors">
+                       ดูทั้งหมด <ArrowRight size={16} className="ml-1" />
+                   </button>
                </div>
             </div>
             

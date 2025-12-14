@@ -14,7 +14,7 @@ const UPLOAD_PRESET = "phayao_upload";
 
 // --- FETCH DATA ---
 
-export const getProperties = async (type?: PropertyType | 'All' | 'VIDEO'): Promise<Property[]> => {
+export const getProperties = async (type?: PropertyType | 'All' | 'VIDEO' | 'HUNDRED_K'): Promise<Property[]> => {
   if (!db) {
     console.warn("Firestore not initialized");
     return [];
@@ -27,6 +27,9 @@ export const getProperties = async (type?: PropertyType | 'All' | 'VIDEO'): Prom
     if (type === 'VIDEO') {
         // Filter by content type video
         query = query.where("contentType", "==", "video");
+    } else if (type === 'HUNDRED_K') {
+        // Filter by Hundred K flag
+        query = query.where("isHundredK", "==", true);
     } else if (type && type !== 'All') {
         // Filter by Property Type (House, Land, Dorm)
         query = query.where("type", "==", type);
